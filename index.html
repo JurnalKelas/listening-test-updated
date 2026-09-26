@@ -6,7 +6,6 @@
     <title>Ujian Listening - Platform Guru & Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-    <!-- Tambahan Library Chart.js untuk Grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .print-only { display: none; }
@@ -20,7 +19,7 @@
         .fade-out { animation: fadeOut 2s forwards; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
-        /* Tambahan untuk transisi halus saat klik navigasi soal */
+        /* Transisi halus saat klik nomor di navigasi soal */
         html { scroll-behavior: smooth; }
     </style>
 </head>
@@ -34,7 +33,7 @@
         </div>
     </nav>
 
-    <!-- KONTEN UTAMA - Diperlebar untuk menampung panel navigasi TKA -->
+    <!-- KONTEN UTAMA -->
     <main class="max-w-6xl mx-auto p-4 md:p-8">
         
         <!-- ================= RUANG SISWA ================= -->
@@ -64,22 +63,22 @@
             </div>
 
             <!-- LAYOUT UJIAN TKA (Soal di kiri, Navigasi di kanan) -->
-            <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex flex-col lg:flex-row gap-6 items-start">
                 
                 <!-- Kiri: Daftar Soal -->
-                <div class="flex-1 space-y-6" id="studentContainer">
+                <div class="flex-1 space-y-6 w-full order-2 lg:order-1" id="studentContainer">
                     <!-- Konten Soal akan di-render oleh JS -->
                 </div>
 
                 <!-- Kanan: Panel Navigasi Ala TKA -->
-                <div class="w-full lg:w-80 flex-shrink-0 no-print" id="studentNavPanel" style="display: none;">
-                    <div class="sticky top-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="w-full lg:w-80 flex-shrink-0 no-print order-1 lg:order-2 sticky top-6" id="studentNavPanel" style="display: none;">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
                             <h3 class="font-bold text-slate-700">Navigasi Soal</h3>
                             <span class="text-sm font-bold text-blue-600" id="navScoreDisplay"></span>
                         </div>
                         
-                        <div id="navigationGrid" class="grid grid-cols-5 gap-2 mb-6">
+                        <div id="navigationGrid" class="grid grid-cols-5 gap-2 mb-6 max-h-60 overflow-y-auto p-1">
                             <!-- Grid Tombol Navigasi akan di-render oleh JS -->
                         </div>
 
@@ -215,7 +214,6 @@
                     </div>
                 </div>
 
-                <!-- RINGKASAN PER KELAS BARU -->
                 <div class="mb-8">
                     <h3 class="font-bold text-lg text-slate-800 mb-3">📈 Ringkasan Per Kelas</h3>
                     <div id="summaryCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -243,7 +241,6 @@
                         </select>
                     </div>
                     <div class="flex gap-2 flex-wrap w-full md:w-auto">
-                        <!-- FITUR BARU: BACKUP & IMPORT NILAI -->
                         <input type="file" id="importGradesFile" accept=".json" class="hidden" onchange="importGrades(event)">
                         <button onclick="document.getElementById('importGradesFile').click()" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-4 py-2 rounded-lg transition border border-indigo-200 flex items-center justify-center gap-2 flex-1 md:flex-none">
                             📥 Import Nilai
@@ -296,25 +293,22 @@
 
     <!-- SCRIPT UTAMA -->
     <script>
-        // KODE KEAMANAN ANTI KLIK KANAN DAN ANTI INSPECT
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // F12
+            if(e.keyCode == 123) return false; 
             if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; 
             if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; 
             if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; 
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         }
 
-        // ============================================
         const PIN_GURU = "123456"; 
-        // ============================================
 
         function switchTab(tab) {
             if (tab === 'guru' && !isStudentMode) {
                 let inputPin = prompt("🔒 Masukkan PIN Rahasia Pembuat Aplikasi:");
                 if (inputPin !== PIN_GURU) {
-                    showModal("Akses Ditolak", "PIN yang Anda masukkan salah. Hanya pembuat aplikasi yang bisa masuk.");
+                    showModal("Akses Ditolak", "PIN yang Anda masukkan salah.");
                     return; 
                 }
             }
@@ -394,7 +388,7 @@
         let globalExamIndex = 0;
         window.globalQuestionCounter = 0; 
 
-        // Indikator Grid (TKA Style)
+        // Fungsi Indikator Navigasi (Visual ala TKA)
         function toggleIndicator(absoluteIndex, isAnswered) {
             const navBtn = document.getElementById(`nav-btn-${absoluteIndex}`);
             if (navBtn) {
@@ -410,16 +404,6 @@
 
         window.onload = async () => {
             if(!isStudentMode) {
-                try {
-                    for (let key of ['listeningExamData', 'listeningExamBank', 'listeningExamGrades']) {
-                        let oldData = localStorage.getItem(key);
-                        if (oldData) {
-                            await setItemDB(key, JSON.parse(oldData));
-                            localStorage.removeItem(key); 
-                        }
-                    }
-                } catch(e) { console.error("Migration error", e); }
-
                 const savedActive = await getItemDB('listeningExamData');
                 if (savedActive) topicsData = savedActive;
                 
@@ -471,7 +455,7 @@
             document.getElementById('btn-guru-rekap').className = subTab === 'rekap' ? "px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600" : "px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
         }
 
-        // ================= RUANG SISWA (TKA Style) =================
+        // ================= RUANG SISWA =================
         function renderStudentView() {
             const container = document.getElementById('studentContainer');
             const navGrid = document.getElementById('navigationGrid');
@@ -508,7 +492,7 @@
                         const currentAbsoluteQ = totalQuestionsGlobal;
                         const qType = q.type || 'sa';
                         
-                        navGridHtml += `<button type="button" id="nav-btn-${currentAbsoluteQ}" onclick="document.getElementById('q-item-${currentAbsoluteQ}').scrollIntoView({behavior: 'smooth', block: 'center'})" class="w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition">${currentAbsoluteQ}</button>`;
+                        navGridHtml += `<button type="button" id="nav-btn-${currentAbsoluteQ}" onclick="document.getElementById('q-item-${currentAbsoluteQ}').scrollIntoView({behavior: 'smooth', block: 'center'})" class="w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition shadow-sm">${currentAbsoluteQ}</button>`;
 
                         qHtml += `
                             <div id="q-item-${currentAbsoluteQ}" class="question-item bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-24" data-exam="${tIndex}" data-audio="${aIndex}" data-question="${qIndex}" data-qtype="${qType}">
@@ -533,7 +517,6 @@
                                 qHtml += `
                                     <label for="${optId}" class="flex items-center p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition opt-label no-print relative overflow-hidden group">
                                         <input type="radio" onchange="toggleIndicator(${currentAbsoluteQ}, true)" id="${optId}" name="${radioName}" value="${oIdx}" class="hidden peer">
-                                        <!-- Fake Radio Button A,B,C,D -->
                                         <div class="w-8 h-8 rounded-full border-2 border-slate-400 flex items-center justify-center font-bold text-slate-500 mr-4 peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white transition-all shadow-sm">${letter}</div>
                                         <span class="text-slate-700 text-sm font-medium flex-1">${cleanOpt}</span>
                                         <div class="absolute inset-0 border-2 border-transparent peer-checked:border-blue-500 rounded-xl pointer-events-none transition-all"></div>
@@ -726,19 +709,14 @@
             let currentGrades = await getItemDB('listeningExamGrades') || [];
             currentGrades.push(newGradeRecord);
             await setItemDB('listeningExamGrades', currentGrades);
-            
-            if(!isStudentMode) { 
-                studentGrades = currentGrades; 
-                renderGradesTable(); 
-            }
 
             const rawToken = `${name} | ${className} | ${correctCount} | ${totalSoal} | ${dateStr} | ${topicTitle}`;
             document.getElementById('studentTokenResult').value = btoa(encodeURIComponent(rawToken)); 
-            if(isStudentMode) document.getElementById('autoSaveMsg').classList.add('hidden');
             
+            document.getElementById('autoSaveMsg').classList.add('hidden');
             document.getElementById('tokenContainer').classList.remove('hidden');
-            document.getElementById('btn-submit-exam').classList.add('hidden'); // Hilangkan tombol submit
-
+            document.getElementById('btn-submit-exam').classList.add('hidden'); 
+            
             showModal("Penilaian Selesai", `Tersimpan! Kamu mendapatkan nilai akhir: ${nilaiAkhir}.`);
         }
 
@@ -766,7 +744,7 @@
         function printReport() {
             const name = document.getElementById('studentName').value.trim();
             const className = document.getElementById('studentClass').value.trim();
-            if (name === "" || className === "") { showModal("Data Belum Lengkap", "Mohon isi NAMA dan KELAS!"); return; }
+            if (name === "" || className === "") { showModal("Data Belum Lengkap", "Mohon isi NAMA dan KELAS di bagian atas!"); return; }
             document.getElementById('printName').textContent = `Nama: ${name}`;
             document.getElementById('printClass').textContent = `Kelas: ${className}`;
             window.print();
@@ -2108,21 +2086,40 @@
         
         function processExport() {
             let currentHTML = document.documentElement.outerHTML;
-            let parser = new DOMParser(); let doc = parser.parseFromString(currentHTML, 'text/html');
-            doc.getElementById('nav-menu').remove(); doc.getElementById('ruang-guru').remove();
+            let parser = new DOMParser(); 
+            let doc = parser.parseFromString(currentHTML, 'text/html');
+            
+            // Hapus elemen Guru
+            doc.getElementById('nav-menu').remove(); 
+            doc.getElementById('ruang-guru').remove();
             doc.getElementById('ruang-siswa').classList.remove('hidden');
-            let securedDataStr = JSON.stringify(topicsData);
+            
+            // Bersihkan data lama jika ada
+            let oldScripts = doc.querySelectorAll('script#injected-data, script#exam-data');
+            oldScripts.forEach(s => s.remove());
+
+            // Tanamkan data JSON baru dengan aman (anti base64 limit)
+            let dataScript = doc.createElement('script');
+            dataScript.id = 'exam-data';
+            dataScript.type = 'application/json';
+            dataScript.textContent = JSON.stringify(topicsData).replace(/<\//g, '<\\/');
+            doc.body.appendChild(dataScript);
+
             let injectionScript = doc.createElement('script');
+            injectionScript.id = 'injected-data';
             injectionScript.textContent = `
-                const encryptedExam = "${btoa(encodeURIComponent(securedDataStr))}";
-                topicsData = JSON.parse(decodeURIComponent(atob(encryptedExam)));
+                const dataElement = document.getElementById('exam-data');
+                topicsData = JSON.parse(dataElement.textContent);
                 isStudentMode = true; 
                 window.onload = () => { renderStudentView(); };
             `;
             doc.body.appendChild(injectionScript);
+
             let blob = new Blob(["<!DOCTYPE html>\n" + doc.documentElement.outerHTML], { type: "text/html;charset=utf-8" });
-            let downloadLink = document.createElement("a"); downloadLink.href = URL.createObjectURL(blob);
-            downloadLink.download = "Listening_Exam_Student.html"; downloadLink.click();
+            let downloadLink = document.createElement("a"); 
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = "Ujian_Listening_Siswa.html"; 
+            downloadLink.click();
         }
     </script>
 </body>
