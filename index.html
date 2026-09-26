@@ -19,6 +19,9 @@
         @keyframes fadeOut { 0% {opacity: 1;} 100% {opacity: 0;} }
         .fade-out { animation: fadeOut 2s forwards; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Tambahan untuk transisi halus saat klik navigasi soal */
+        html { scroll-behavior: smooth; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans transition-colors duration-300">
@@ -31,65 +34,97 @@
         </div>
     </nav>
 
-    <!-- KONTEN UTAMA -->
-    <main class="max-w-4xl mx-auto p-4 md:p-8">
+    <!-- KONTEN UTAMA - Diperlebar untuk menampung panel navigasi TKA -->
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
         
         <!-- ================= RUANG SISWA ================= -->
         <section id="ruang-siswa" class="block">
-            <h1 class="text-3xl font-extrabold text-blue-600 text-center mb-2">Lembar Ujian Listening</h1>
-            <p class="text-slate-500 text-center mb-8 no-print">Dengarkan audio dengan saksama dan isi jawaban yang tepat.</p>
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl font-extrabold text-blue-600 text-center mb-2">Lembar Ujian Listening</h1>
+                <p class="text-slate-500 text-center mb-8 no-print">Dengarkan audio dengan saksama dan isi jawaban yang tepat.</p>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 grid md:grid-cols-2 gap-4 no-print">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2">NAMA LENGKAP</label>
-                    <input type="text" id="studentName" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Masukkan namamu...">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 grid md:grid-cols-2 gap-4 no-print">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2">NAMA LENGKAP</label>
+                        <input type="text" id="studentName" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Masukkan namamu...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-2">KELAS / NO. ABSEN</label>
+                        <input type="text" id="studentClass" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Contoh: 8A / 12">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2">KELAS / NO. ABSEN</label>
-                    <input type="text" id="studentClass" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Contoh: 8A / 12">
-                </div>
-            </div>
 
-            <div class="print-only mb-8 text-center border-b-2 border-slate-800 pb-4">
-                <h2 class="text-2xl font-bold uppercase">Hasil Ujian Listening</h2>
-                <div class="flex justify-between mt-4 text-lg">
-                    <span id="printName">Nama: _________________</span>
-                    <span id="printClass">Kelas: _________________</span>
-                </div>
-            </div>
-
-            <div id="studentContainer" class="space-y-6"></div>
-
-            <div id="tokenContainer" class="hidden bg-indigo-50 border-2 border-indigo-200 p-6 rounded-2xl mt-8 text-center no-print shadow-sm">
-                <h3 class="text-lg font-bold text-indigo-800 mb-2">🎉 Ujian Selesai!</h3>
-                <p id="autoSaveMsg" class="text-sm text-emerald-600 font-bold mb-4">✅ Nilaimu sudah otomatis tersimpan di memori browser ini.</p>
-                <p class="text-xs text-indigo-600 mb-4">Jika kamu mengerjakan di perangkat/HP lain, kirimkan Kode Setoran di bawah ini ke guru agar nilaimu direkap.</p>
-                
-                <div class="flex flex-col md:flex-row justify-center items-center gap-3 mb-2">
-                    <input type="text" id="studentTokenResult" readonly class="w-full md:w-2/3 p-3 bg-white border border-indigo-300 rounded-xl font-mono text-sm text-center focus:outline-none">
-                    <button onclick="copyToken()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-md w-full md:w-auto">Salin Kode</button>
-                </div>
-                <span id="copyMsg" class="text-xs font-bold text-emerald-600 block opacity-0 h-4">Berhasil disalin!</span>
-                
-                <div class="mt-4 pt-4 border-t border-indigo-200">
-                    <p class="text-xs text-indigo-700 font-bold mb-2">Atau kirim langsung ke WhatsApp Guru:</p>
-                    <div class="flex flex-col md:flex-row justify-center items-center gap-2">
-                        <input type="text" id="waGuru" placeholder="Nomor WA Guru (Cth: 62812...)" class="w-full md:w-1/2 p-3 bg-white border border-green-300 rounded-xl text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
-                        <button onclick="sendToWA()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 text-sm w-full md:w-auto">
-                            💬 Kirim ke WA
-                        </button>
+                <div class="print-only mb-8 text-center border-b-2 border-slate-800 pb-4">
+                    <h2 class="text-2xl font-bold uppercase">Hasil Ujian Listening</h2>
+                    <div class="flex justify-between mt-4 text-lg">
+                        <span id="printName">Nama: _________________</span>
+                        <span id="printClass">Kelas: _________________</span>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 text-center no-print">
-                <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1">🖨️ Cetak Lembar Hasil (PDF)</button>
+            <!-- LAYOUT UJIAN TKA (Soal di kiri, Navigasi di kanan) -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <!-- Kiri: Daftar Soal -->
+                <div class="flex-1 space-y-6" id="studentContainer">
+                    <!-- Konten Soal akan di-render oleh JS -->
+                </div>
+
+                <!-- Kanan: Panel Navigasi Ala TKA -->
+                <div class="w-full lg:w-80 flex-shrink-0 no-print" id="studentNavPanel" style="display: none;">
+                    <div class="sticky top-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 class="font-bold text-slate-700">Navigasi Soal</h3>
+                            <span class="text-sm font-bold text-blue-600" id="navScoreDisplay"></span>
+                        </div>
+                        
+                        <div id="navigationGrid" class="grid grid-cols-5 gap-2 mb-6">
+                            <!-- Grid Tombol Navigasi akan di-render oleh JS -->
+                        </div>
+
+                        <div class="text-xs text-slate-500 mb-4 border-t border-slate-100 pt-4 space-y-2">
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded border-2 border-slate-300 bg-white"></div> Belum Dijawab</div>
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-emerald-500 border-2 border-emerald-600"></div> Sudah Dijawab</div>
+                        </div>
+
+                        <button id="btn-submit-exam" onclick="submitExam()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold shadow-md transform transition text-sm">Kumpulkan Jawaban</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div id="tokenContainer" class="hidden bg-indigo-50 border-2 border-indigo-200 p-6 rounded-2xl mt-8 text-center no-print shadow-sm">
+                    <h3 class="text-lg font-bold text-indigo-800 mb-2">🎉 Ujian Selesai!</h3>
+                    <p id="autoSaveMsg" class="text-sm text-emerald-600 font-bold mb-4">✅ Nilaimu sudah otomatis tersimpan di memori browser ini.</p>
+                    <p class="text-xs text-indigo-600 mb-4">Jika kamu mengerjakan di perangkat/HP lain, kirimkan Kode Setoran di bawah ini ke guru agar nilaimu direkap.</p>
+                    
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-3 mb-2">
+                        <input type="text" id="studentTokenResult" readonly class="w-full md:w-2/3 p-3 bg-white border border-indigo-300 rounded-xl font-mono text-sm text-center focus:outline-none">
+                        <button onclick="copyToken()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-md w-full md:w-auto">Salin Kode</button>
+                    </div>
+                    <span id="copyMsg" class="text-xs font-bold text-emerald-600 block opacity-0 h-4">Berhasil disalin!</span>
+                    
+                    <div class="mt-4 pt-4 border-t border-indigo-200">
+                        <p class="text-xs text-indigo-700 font-bold mb-2">Atau kirim langsung ke WhatsApp Guru:</p>
+                        <div class="flex flex-col md:flex-row justify-center items-center gap-2">
+                            <input type="text" id="waGuru" placeholder="Nomor WA Guru (Cth: 62812...)" class="w-full md:w-1/2 p-3 bg-white border border-green-300 rounded-xl text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                            <button onclick="sendToWA()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 text-sm w-full md:w-auto">
+                                💬 Kirim ke WA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center no-print">
+                    <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1">🖨️ Cetak Lembar Hasil (PDF)</button>
+                </div>
             </div>
         </section>
 
 
         <!-- ================= RUANG GURU ================= -->
-        <section id="ruang-guru" class="hidden no-print">
+        <section id="ruang-guru" class="hidden no-print max-w-5xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
                 <div>
                     <h1 class="text-3xl font-extrabold text-emerald-600">Panel Guru</h1>
@@ -248,10 +283,6 @@
             </div>
         </section>
 
-        <!-- Footer -->
-        <footer class="mt-12 text-center text-sm font-medium text-slate-400 no-print">
-            Created by : Saiful Hadi
-        </footer>
     </main>
 
     <!-- Modal Custom -->
@@ -269,14 +300,13 @@
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
         }
 
         // ============================================
-        // PIN RAHASIA GURU (GANTI ANGKA INI JIKA PERLU)
         const PIN_GURU = "123456"; 
         // ============================================
 
@@ -360,7 +390,23 @@
         let classChartInstance = null;
         let studentChartInstance = null;
         
+        let totalQuestionsGlobal = 0;
+        let globalExamIndex = 0;
         window.globalQuestionCounter = 0; 
+
+        // Indikator Grid (TKA Style)
+        function toggleIndicator(absoluteIndex, isAnswered) {
+            const navBtn = document.getElementById(`nav-btn-${absoluteIndex}`);
+            if (navBtn) {
+                if (isAnswered) {
+                    navBtn.classList.remove('bg-white', 'text-slate-600', 'border-slate-300');
+                    navBtn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                } else {
+                    navBtn.classList.add('bg-white', 'text-slate-600', 'border-slate-300');
+                    navBtn.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-600');
+                }
+            }
+        }
 
         window.onload = async () => {
             if(!isStudentMode) {
@@ -408,6 +454,7 @@
             }
             modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
         }
+
         function closeModal() {
             const modal = document.getElementById('customModal');
             const box = document.getElementById('modalBox');
@@ -424,57 +471,79 @@
             document.getElementById('btn-guru-rekap').className = subTab === 'rekap' ? "px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600" : "px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
         }
 
-        // ================= RUANG SISWA =================
+        // ================= RUANG SISWA (TKA Style) =================
         function renderStudentView() {
             const container = document.getElementById('studentContainer');
+            const navGrid = document.getElementById('navigationGrid');
+            const navPanel = document.getElementById('studentNavPanel');
+            
             container.innerHTML = ''; 
+            if(navGrid) navGrid.innerHTML = '';
+            totalQuestionsGlobal = 0;
+
             if(topicsData.length === 0) { 
-                container.innerHTML = `<div class="text-center p-8 text-slate-500 border-2 border-dashed border-slate-300 rounded-2xl">Ujian belum disiapkan oleh guru.</div>`; return; 
+                container.innerHTML = `<div class="text-center p-8 text-slate-500 border-2 border-dashed border-slate-300 rounded-2xl">Ujian belum disiapkan.</div>`; 
+                if(navPanel) navPanel.style.display = 'none';
+                return; 
             }
             
+            if(navPanel) navPanel.style.display = 'block';
+
             topicsData.forEach((topic, tIndex) => {
+                globalExamIndex = tIndex;
                 let topicHtml = `
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
-                        <h2 class="text-2xl font-extrabold text-slate-800 border-b border-slate-100 pb-4 mb-6">${topic.title}</h2>
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                            <h2 class="text-2xl font-extrabold text-slate-800">${topic.title}</h2>
+                        </div>
                         <div class="space-y-8">
                 `;
 
-                let totalQuestions = 0;
+                let navGridHtml = '';
 
                 topic.audios.forEach((track, aIndex) => {
-                    totalQuestions += track.questions.length;
                     let qHtml = '';
                     track.questions.forEach((q, qIndex) => {
+                        totalQuestionsGlobal++;
+                        const currentAbsoluteQ = totalQuestionsGlobal;
                         const qType = q.type || 'sa';
                         
+                        navGridHtml += `<button type="button" id="nav-btn-${currentAbsoluteQ}" onclick="document.getElementById('q-item-${currentAbsoluteQ}').scrollIntoView({behavior: 'smooth', block: 'center'})" class="w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition">${currentAbsoluteQ}</button>`;
+
                         qHtml += `
-                            <div class="question-item bg-white p-4 rounded-xl border border-slate-200 shadow-sm" data-exam="${tIndex}" data-audio="${aIndex}" data-question="${qIndex}" data-qtype="${qType}">
-                                <div class="text-sm font-bold text-blue-600 mb-1">Question ${qIndex + 1}</div>
-                                <div class="text-slate-700 font-medium mb-3">📍 ${escapeHtml(q.instruction)}</div>
+                            <div id="q-item-${currentAbsoluteQ}" class="question-item bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-24" data-exam="${tIndex}" data-audio="${aIndex}" data-question="${qIndex}" data-qtype="${qType}">
+                                <div class="flex items-center mb-3">
+                                    <div class="text-sm font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">Soal ${currentAbsoluteQ}</div>
+                                </div>
+                                <div class="text-slate-700 font-medium mb-4 leading-relaxed text-[15px]">📍 ${escapeHtml(q.instruction)}</div>
                         `;
 
                         if (qType === 'sa') {
                             const answersAttr = encodeURIComponent(JSON.stringify(q.acceptableAnswers));
-                            qHtml += `<input type="text" class="q-input-sa w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-400 no-print text-sm" data-answers="${answersAttr}" placeholder="Type your answer...">`;
+                            qHtml += `<input type="text" oninput="toggleIndicator(${currentAbsoluteQ}, this.value.trim() !== '')" class="q-input-sa w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-400 no-print text-sm" data-answers="${answersAttr}" placeholder="Ketik jawabanmu di sini...">`;
                         } else if (qType === 'mcq') {
                             const correctAns = q.acceptableAnswers[0];
-                            qHtml += `<div class="space-y-2 q-input-mcq" data-answer="${correctAns}">`;
+                            qHtml += `<div class="space-y-3 q-input-mcq" data-answer="${correctAns}">`;
                             q.options.forEach((opt, oIdx) => {
                                 if(!opt) return;
                                 const cleanOpt = escapeHtml((opt || "").toString().replace(/\*/g, '').trim());
                                 const optId = `mcq-${tIndex}-${aIndex}-${qIndex}-${oIdx}`;
                                 const radioName = `mcq-${tIndex}-${aIndex}-${qIndex}`;
+                                const letter = String.fromCharCode(65 + oIdx);
                                 qHtml += `
-                                    <label for="${optId}" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-blue-50 transition opt-label no-print">
-                                        <input type="radio" id="${optId}" name="${radioName}" value="${oIdx}" class="w-4 h-4 text-blue-600 focus:ring-blue-400 cursor-pointer">
-                                        <span class="text-slate-700 text-sm font-medium">${cleanOpt}</span>
+                                    <label for="${optId}" class="flex items-center p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition opt-label no-print relative overflow-hidden group">
+                                        <input type="radio" onchange="toggleIndicator(${currentAbsoluteQ}, true)" id="${optId}" name="${radioName}" value="${oIdx}" class="hidden peer">
+                                        <!-- Fake Radio Button A,B,C,D -->
+                                        <div class="w-8 h-8 rounded-full border-2 border-slate-400 flex items-center justify-center font-bold text-slate-500 mr-4 peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white transition-all shadow-sm">${letter}</div>
+                                        <span class="text-slate-700 text-sm font-medium flex-1">${cleanOpt}</span>
+                                        <div class="absolute inset-0 border-2 border-transparent peer-checked:border-blue-500 rounded-xl pointer-events-none transition-all"></div>
                                     </label>
                                 `;
                             });
                             qHtml += `</div>`;
                         }
                         
-                        qHtml += `<div id="feedback-${tIndex}-${aIndex}-${qIndex}" class="mt-2 text-sm font-bold hidden print-only"></div>`;
+                        qHtml += `<div id="feedback-${tIndex}-${aIndex}-${qIndex}" class="mt-4 text-sm font-bold hidden print-only"></div>`;
                         qHtml += `</div>`;
                     });
 
@@ -482,34 +551,31 @@
                     const btnStyle = sisaPutar <= 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 shadow-md';
 
                     topicHtml += `
-                        <div class="p-5 border-2 border-slate-100 rounded-2xl bg-slate-50 relative">
-                            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                        <div class="p-6 border-2 border-slate-100 rounded-2xl bg-slate-50 relative shadow-inner">
+                            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4 border-b border-slate-200 pb-4">
                                 <h3 class="text-lg font-bold text-slate-700">🎧 Part ${aIndex + 1}</h3>
-                                <button id="btn-play-${tIndex}-${aIndex}" onclick="playAudioText(${tIndex}, ${aIndex})" class="no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center ${btnStyle}">
-                                    ▶️ Play Audio (Sisa: ${sisaPutar}x)
+                                <button id="btn-play-${tIndex}-${aIndex}" onclick="playAudioText(${tIndex}, ${aIndex})" class="no-print text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 justify-center ${btnStyle}">
+                                    ▶️ Putar Audio (Sisa: ${sisaPutar}x)
                                 </button>
                             </div>
-                            <div class="grid gap-4">${qHtml}</div>
+                            <div class="grid gap-6">${qHtml}</div>
                         </div>
                     `;
                 });
 
                 topicHtml += `
                         </div>
-                        <div class="mt-8 flex justify-between items-center bg-slate-100 p-5 rounded-2xl no-print border border-slate-300">
-                            <span class="font-extrabold text-slate-700 text-lg" id="score-${tIndex}">Score: 0 / ${totalQuestions}</span>
-                            <button onclick="checkAnswers(${tIndex})" class="bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-md transform hover:-translate-y-1 transition text-lg">Submit & Check</button>
-                        </div>
                     </div>
                 `;
                 container.innerHTML += topicHtml;
+                if(navGrid) navGrid.innerHTML += navGridHtml;
             });
         }
 
         function playAudioText(tIndex, aIndex) {
             const track = topicsData[tIndex].audios[aIndex];
             if (typeof track.playCount === 'undefined') track.playCount = 0;
-            if (track.playCount >= 10) { showModal("Akses Ditolak", "Batas pemutaran audio sudah habis."); return; }
+            if (track.playCount >= 10) { showModal("Batas Habis", "Batas pemutaran audio sudah habis."); return; }
             
             const btn = document.getElementById(`btn-play-${tIndex}-${aIndex}`);
             
@@ -529,9 +595,9 @@
                 btn.innerHTML = `⏳ Sedang Memutar...`;
                 currentCustomAudioObj.onended = () => {
                     btn.disabled = false;
-                    btn.innerHTML = `▶️ Play Audio (Sisa: ${sisa}x)`;
+                    btn.innerHTML = `▶️ Putar Audio (Sisa: ${sisa}x)`;
                     if(sisa === 0) {
-                        btn.className = "no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
+                        btn.className = "no-print text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
                         btn.disabled = true;
                     }
                 };
@@ -541,29 +607,41 @@
                 utterance.rate = parseFloat(track.rate || 0.9); 
                 window.speechSynthesis.speak(utterance);
 
-                btn.innerHTML = `▶️ Play Audio (Sisa: ${sisa}x)`;
+                btn.innerHTML = `▶️ Putar Audio (Sisa: ${sisa}x)`;
                 if(sisa === 0) {
-                    btn.className = "no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
+                    btn.className = "no-print text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
                     btn.disabled = true;
                 }
             }
         }
 
+        function submitExam() {
+            showModal("Kumpulkan Ujian?", "Pastikan semua nomor sudah terjawab (warna hijau). Lanjutkan kumpulkan?", true, () => {
+                checkAnswers(globalExamIndex);
+            });
+        }
+
         async function checkAnswers(tIndex) {
             const name = document.getElementById('studentName').value.trim();
             const className = document.getElementById('studentClass').value.trim();
-            if (name === "" || className === "") { showModal("Data Belum Lengkap", "Mohon isi NAMA LENGKAP dan KELAS!"); return; }
+            if (name === "" || className === "") { 
+                showModal("Data Belum Lengkap", "Mohon isi NAMA LENGKAP dan KELAS di bagian atas form!"); 
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return; 
+            }
             
             let correctCount = 0;
             let totalSoal = 0;
 
             const questionItems = document.querySelectorAll(`div.question-item[data-exam="${tIndex}"]`);
-            questionItems.forEach(item => {
+            questionItems.forEach((item, index) => {
                 totalSoal++;
+                const currentAbsoluteQ = index + 1;
                 const aIndex = item.getAttribute('data-audio');
                 const qIndex = item.getAttribute('data-question');
                 const qType = item.getAttribute('data-qtype');
                 const feedbackDiv = document.getElementById(`feedback-${tIndex}-${aIndex}-${qIndex}`);
+                const navBtn = document.getElementById(`nav-btn-${currentAbsoluteQ}`);
                 let isCorrect = false;
                 
                 feedbackDiv.classList.remove('hidden');
@@ -576,14 +654,17 @@
                     
                     if (isCorrect && userAns !== "") {
                         input.className = 'q-input-sa w-full p-3 border-2 border-emerald-400 bg-emerald-50 text-emerald-800 rounded-xl no-print font-bold text-sm';
-                        feedbackDiv.innerHTML = '✅ Correct'; 
-                        feedbackDiv.className = 'mt-2 text-sm font-bold text-emerald-600 print-only block'; 
+                        feedbackDiv.innerHTML = '✅ Benar'; 
+                        feedbackDiv.className = 'mt-3 text-sm font-bold text-emerald-600 print-only block'; 
                         correctCount++;
+                        if(navBtn) navBtn.className = "w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-emerald-600 bg-emerald-500 text-white";
                     } else {
                         input.className = 'q-input-sa w-full p-3 border-2 border-red-400 bg-red-50 text-red-800 rounded-xl no-print text-sm';
-                        feedbackDiv.innerHTML = `❌ Wrong. <span class="text-slate-600 font-normal">Answer: <b class="text-emerald-600">${acceptableAnswers.join(" / ")}</b></span>`;
-                        feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block'; 
+                        feedbackDiv.innerHTML = `❌ Salah. <span class="text-slate-600 font-normal">Jawaban: <b class="text-emerald-600">${acceptableAnswers.join(" / ")}</b></span>`;
+                        feedbackDiv.className = 'mt-3 text-sm text-red-500 font-bold block'; 
+                        if(navBtn) navBtn.className = "w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-red-500 bg-red-100 text-red-600";
                     }
+                    input.readOnly = true;
                 } else if (qType === 'mcq') {
                     const mcqGroup = item.querySelector('.q-input-mcq');
                     const correctAns = mcqGroup.getAttribute('data-answer');
@@ -595,32 +676,47 @@
                         const userAns = checkedRadio.value;
                         isCorrect = (userAns === correctAns);
                         const checkedLabel = checkedRadio.closest('.opt-label');
+                        const letterCircle = checkedLabel.querySelector('.rounded-full');
                         
                         if (isCorrect) {
-                            checkedLabel.classList.add('border-emerald-400', 'bg-emerald-50', 'text-emerald-800', 'border-2');
-                            feedbackDiv.innerHTML = '✅ Correct'; 
-                            feedbackDiv.className = 'mt-2 text-sm font-bold text-emerald-600 print-only block'; 
+                            checkedLabel.classList.add('border-emerald-400', 'bg-emerald-50', 'text-emerald-800');
+                            checkedLabel.classList.remove('border-slate-200');
+                            letterCircle.classList.replace('peer-checked:bg-blue-600', 'peer-checked:bg-emerald-500');
+                            letterCircle.classList.replace('peer-checked:border-blue-600', 'peer-checked:border-emerald-500');
+                            feedbackDiv.innerHTML = '✅ Benar'; 
+                            feedbackDiv.className = 'mt-3 text-sm font-bold text-emerald-600 print-only block'; 
                             correctCount++;
+                            if(navBtn) navBtn.className = "w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-emerald-600 bg-emerald-500 text-white";
                         } else {
-                            checkedLabel.classList.add('border-red-400', 'bg-red-50', 'text-red-800', 'border-2');
-                            feedbackDiv.innerHTML = `❌ Wrong.`;
-                            feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block'; 
+                            checkedLabel.classList.add('border-red-400', 'bg-red-50', 'text-red-800');
+                            checkedLabel.classList.remove('border-slate-200');
+                            letterCircle.classList.replace('peer-checked:bg-blue-600', 'peer-checked:bg-red-500');
+                            letterCircle.classList.replace('peer-checked:border-blue-600', 'peer-checked:border-red-500');
+                            feedbackDiv.innerHTML = `❌ Salah`;
+                            feedbackDiv.className = 'mt-3 text-sm text-red-500 font-bold block'; 
+                            if(navBtn) navBtn.className = "w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-red-500 bg-red-100 text-red-600";
                         }
                     } else {
-                        feedbackDiv.innerHTML = `❌ No answer selected.`;
-                        feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block';
+                        feedbackDiv.innerHTML = `❌ Tidak dijawab`;
+                        feedbackDiv.className = 'mt-3 text-sm text-red-500 font-bold block';
+                        if(navBtn) navBtn.className = "w-10 h-10 flex items-center justify-center rounded-lg font-bold border-2 border-red-500 bg-red-100 text-red-600";
                     }
                     
                     const correctRadio = mcqGroup.querySelector(`input[type="radio"][value="${correctAns}"]`);
                     if(correctRadio && !isCorrect) {
                         const correctLabel = correctRadio.closest('.opt-label');
-                        correctLabel.classList.add('border-emerald-400', 'border-2', 'border-dashed'); 
+                        correctLabel.classList.add('border-emerald-500', 'border-2', 'border-dashed'); 
+                        const circle = correctLabel.querySelector('.rounded-full');
+                        circle.classList.replace('border-slate-400', 'border-emerald-500');
+                        circle.classList.replace('text-slate-500', 'text-emerald-600');
+                        circle.classList.add('bg-emerald-100');
                     }
                 }
             });
 
             const nilaiAkhir = Math.round((correctCount / totalSoal) * 100);
-            document.getElementById(`score-${tIndex}`).innerHTML = `Final Score: <span class="text-emerald-600 font-extrabold text-xl">${correctCount} / ${totalSoal}</span>`;
+            const scoreDisplay = document.getElementById('navScoreDisplay');
+            if(scoreDisplay) scoreDisplay.innerHTML = `NILAI: <span class="text-emerald-600 font-extrabold text-xl ml-1">${nilaiAkhir}</span>`;
             
             const dateStr = new Date().toLocaleString('id-ID', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'});
             const topicTitle = topicsData[tIndex].title || "Ujian Listening";
@@ -639,8 +735,11 @@
             const rawToken = `${name} | ${className} | ${correctCount} | ${totalSoal} | ${dateStr} | ${topicTitle}`;
             document.getElementById('studentTokenResult').value = btoa(encodeURIComponent(rawToken)); 
             if(isStudentMode) document.getElementById('autoSaveMsg').classList.add('hidden');
+            
             document.getElementById('tokenContainer').classList.remove('hidden');
-            showModal("Penilaian Selesai", `Tersimpan! Kamu benar ${correctCount} dari ${totalSoal}.`);
+            document.getElementById('btn-submit-exam').classList.add('hidden'); // Hilangkan tombol submit
+
+            showModal("Penilaian Selesai", `Tersimpan! Kamu mendapatkan nilai akhir: ${nilaiAkhir}.`);
         }
 
         function copyToken() {
@@ -650,6 +749,7 @@
             msg.classList.remove('fade-out'); msg.style.opacity = 1;
             setTimeout(() => { msg.classList.add('fade-out'); }, 1500);
         }
+
         function sendToWA() {
             let waNum = document.getElementById('waGuru').value.trim();
             const token = document.getElementById('studentTokenResult').value;
@@ -662,6 +762,7 @@
             const waUrl = `https://api.whatsapp.com/send?phone=${waNum}&text=${encodeURIComponent(message)}`;
             window.open(waUrl, '_blank');
         }
+
         function printReport() {
             const name = document.getElementById('studentName').value.trim();
             const className = document.getElementById('studentClass').value.trim();
@@ -1257,7 +1358,6 @@
             reader.readAsText(file);
         }
 
-        // ================= FITUR BARU: BACKUP & IMPORT REKAP NILAI (JSON) =================
         function exportGradesJSON() {
             if(studentGrades.length === 0) { showModal("Kosong", "Belum ada rekap nilai siswa untuk di-backup."); return; }
             const dataStr = JSON.stringify(studentGrades, null, 2);
@@ -1517,6 +1617,8 @@
             const classFilter = document.getElementById('classFilter');
             const chartsContainer = document.getElementById('chartsContainer');
             
+            if(!tbody) return;
+
             tbody.innerHTML = '';
             if(summaryContainer) summaryContainer.innerHTML = '';
             
@@ -2003,6 +2105,7 @@
             if(!savedData || savedData.length === 0) { showModal("Data Kosong", "Pilih atau buat soal terlebih dahulu."); return; }
             showModal("Konfirmasi Export", "Download File HTML khusus siswa?", true, processExport);
         }
+        
         function processExport() {
             let currentHTML = document.documentElement.outerHTML;
             let parser = new DOMParser(); let doc = parser.parseFromString(currentHTML, 'text/html');
