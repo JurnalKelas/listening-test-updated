@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Listening - Platform Guru & Siswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <!-- Tambahan Library Chart.js untuk Grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; }
+            .print-border { border-bottom: 1px dashed #cbd5e1; }
+        }
+        @keyframes fadeOut { 0% {opacity: 1;} 100% {opacity: 0;} }
+        .fade-out { animation: fadeOut 2s forwards; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans transition-colors duration-300">
+
+    <!-- Navigasi Utama -->
+    <nav id="nav-menu" class="bg-white shadow-sm border-b border-slate-200 no-print">
+        <div class="max-w-4xl mx-auto px-4 flex justify-center gap-4 py-4">
+            <button onclick="switchTab('siswa')" id="btn-tab-siswa" class="px-6 py-2 rounded-full font-bold transition-all bg-blue-600 text-white shadow-md">🎓 Ruang Siswa</button>
+            <button onclick="switchTab('guru')" id="btn-tab-guru" class="px-6 py-2 rounded-full font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200">👨‍🏫 Ruang Guru</button>
+        </div>
+    </nav>
+
+    <!-- KONTEN UTAMA -->
+    <main class="max-w-4xl mx-auto p-4 md:p-8">
+        
+        <!-- ================= RUANG SISWA ================= -->
+        <section id="ruang-siswa" class="block">
+            <h1 class="text-3xl font-extrabold text-blue-600 text-center mb-2">Lembar Ujian Listening</h1>
+            <p class="text-slate-500 text-center mb-8 no-print">Dengarkan audio dengan saksama dan isi jawaban yang tepat.</p>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 grid md:grid-cols-2 gap-4 no-print">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2">NAMA LENGKAP</label>
+                    <input type="text" id="studentName" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Masukkan namamu...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2">KELAS / NO. ABSEN</label>
+                    <input type="text" id="studentClass" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="Contoh: 8A / 12">
+                </div>
+            </div>
+
+            <div class="print-only mb-8 text-center border-b-2 border-slate-800 pb-4">
+                <h2 class="text-2xl font-bold uppercase">Hasil Ujian Listening</h2>
+                <div class="flex justify-between mt-4 text-lg">
+                    <span id="printName">Nama: _________________</span>
+                    <span id="printClass">Kelas: _________________</span>
+                </div>
+            </div>
+
+            <div id="studentContainer" class="space-y-6"></div>
+
+            <div id="tokenContainer" class="hidden bg-indigo-50 border-2 border-indigo-200 p-6 rounded-2xl mt-8 text-center no-print shadow-sm">
+                <h3 class="text-lg font-bold text-indigo-800 mb-2">🎉 Ujian Selesai!</h3>
+                <p id="autoSaveMsg" class="text-sm text-emerald-600 font-bold mb-4">✅ Nilaimu sudah otomatis tersimpan di memori browser ini.</p>
+                <p class="text-xs text-indigo-600 mb-4">Jika kamu mengerjakan di perangkat/HP lain, kirimkan Kode Setoran di bawah ini ke guru agar nilaimu direkap.</p>
+                
+                <div class="flex flex-col md:flex-row justify-center items-center gap-3 mb-2">
+                    <input type="text" id="studentTokenResult" readonly class="w-full md:w-2/3 p-3 bg-white border border-indigo-300 rounded-xl font-mono text-sm text-center focus:outline-none">
+                    <button onclick="copyToken()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-md w-full md:w-auto">Salin Kode</button>
+                </div>
+                <span id="copyMsg" class="text-xs font-bold text-emerald-600 block opacity-0 h-4">Berhasil disalin!</span>
+                
+                <div class="mt-4 pt-4 border-t border-indigo-200">
+                    <p class="text-xs text-indigo-700 font-bold mb-2">Atau kirim langsung ke WhatsApp Guru:</p>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-2">
+                        <input type="text" id="waGuru" placeholder="Nomor WA Guru (Cth: 62812...)" class="w-full md:w-1/2 p-3 bg-white border border-green-300 rounded-xl text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                        <button onclick="sendToWA()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 text-sm w-full md:w-auto">
+                            💬 Kirim ke WA
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center no-print">
+                <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1">🖨️ Cetak Lembar Hasil (PDF)</button>
+            </div>
+        </section>
+
+
+        <!-- ================= RUANG GURU ================= -->
+        <section id="ruang-guru" class="hidden no-print">
+            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-emerald-600">Panel Guru</h1>
+                    <p class="text-slate-500">Kelola soal, bank soal, dan rekap nilai siswa.</p>
+                </div>
+                <button onclick="exportStudentHTML()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold shadow-md transition flex items-center gap-2">
+                    <span>🗂️ Bagikan ke Siswa (Export)</span>
+                </button>
+            </div>
+
+            <div class="flex gap-2 mb-6 border-b border-slate-200 pb-2 overflow-x-auto whitespace-nowrap">
+                <button onclick="switchTeacherTab('soal')" id="btn-guru-soal" class="px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600">📝 Editor Soal</button>
+                <button onclick="switchTeacherTab('bank')" id="btn-guru-bank" class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent">🗃️ Bank Soal</button>
+                <button onclick="switchTeacherTab('rekap')" id="btn-guru-rekap" class="px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent">📊 Rekap Nilai</button>
+            </div>
+
+            <!-- SUB-SECTION: BUAT SOAL -->
+            <div id="guru-sub-soal" class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm mb-8 block">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">Buat / Edit Ujian</h2>
+                    <button onclick="resetEditor()" class="text-xs text-red-500 font-bold hover:underline">Bersihkan Form (Buat Baru)</button>
+                </div>
+
+                <div class="flex gap-3 mb-6 items-center bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex-wrap">
+                    <span class="font-bold text-indigo-800 text-sm">✨ Paket Siap Pakai:</span>
+                    <select id="templateSelector" class="p-2 border border-indigo-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-400 outline-none w-full md:w-auto flex-1">
+                        <!-- Otomatis diisi oleh Javascript -->
+                    </select>
+                    <button onclick="loadSelectedTemplate()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-sm w-full md:w-auto">Muat ke Editor</button>
+                </div>
+                
+                <label class="block text-sm font-bold text-slate-600 mb-3">Judul Topik / Ujian</label>
+                <input type="text" id="guruTopicTitle" class="w-full p-4 mb-6 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-400 font-bold text-lg" placeholder="Contoh: English Midterm Exam (Grade 8)">
+                
+                <div id="importArea" class="mb-6 p-5 border-2 border-dashed border-emerald-300 bg-emerald-50 rounded-xl transition-all">
+                    <h3 class="font-bold text-emerald-800 text-sm mb-2">📋 Import Otomatis (File .docx / .txt)</h3>
+                    <p class="text-xs text-emerald-600 mb-3">Kini Super Akurat! Tulis: <b>Jawaban: C</b> ATAU letakkan tanda bintang <b>*</b> di mana saja pada baris opsi yang benar.</p>
+                    
+                    <input type="file" id="fileInputDoc" accept=".txt,.docx" onchange="handleFileUpload(event)" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 mb-3 cursor-pointer transition shadow-sm">
+                    
+                    <textarea id="importTextData" rows="6" class="w-full p-3 rounded-xl border border-emerald-200 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-white" placeholder="Contoh Pilihan Ganda (Bintang Bebas Letak):\n1. What is Spider-Man?\n*A. A superhero\nB. A doctor\nC. A teacher\n\nAtau:\n2. What is Batman?\nA. A doctor\nB. A superhero *\nC. A police\n\nContoh Isian:\n3. What time does she wake up?\nJawaban: 6 am"></textarea>
+                    <div class="mt-2 text-right">
+                        <button onclick="processImportText()" class="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow-sm">🔄 Pecah & Masukkan ke Form</button>
+                    </div>
+                </div>
+
+                <div id="materialsWrapper" class="space-y-6 mb-6 mt-4"></div>
+
+                <button onclick="addMaterialBlock()" class="w-full py-4 border-2 border-dashed border-blue-400 text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition mb-8">
+                    + Tambah Bagian Audio Baru (Part Selanjutnya)
+                </button>
+
+                <div class="border-t border-slate-200 pt-6">
+                    <button onclick="saveExamData()" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl hover:bg-slate-700 transition shadow-lg text-lg">💾 Simpan ke Bank Soal & Terapkan Ujian</button>
+                </div>
+            </div>
+
+            <!-- SUB-SECTION: BANK SOAL -->
+            <div id="guru-sub-bank" class="hidden mb-8">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between md:items-end mb-6 border-b border-slate-100 pb-4 gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold mb-1 text-slate-800">Bank Soal Tersimpan</h2>
+                            <p class="text-sm text-slate-500">Kapasitas: Tidak Terbatas (Gunakan fitur Export JSON untuk mengamankan data Anda ke Laptop).</p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <input type="file" id="importBankFile" accept=".json" class="hidden" onchange="importBankSoal(event)">
+                            <button onclick="document.getElementById('importBankFile').click()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold px-4 py-2 rounded-xl text-sm transition border border-indigo-200 flex-1 md:flex-none">📥 Import Bank</button>
+                            <button onclick="exportBankSoal()" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-4 py-2 rounded-xl text-sm transition shadow-sm flex-1 md:flex-none">📤 Backup / Export Bank</button>
+                        </div>
+                    </div>
+                    
+                    <div id="bankSoalContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- SUB-SECTION: REKAP NILAI -->
+            <div id="guru-sub-rekap" class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm mb-8 hidden">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl mb-6 text-sm text-blue-800">
+                    <strong>💡 Info Sistem:</strong> Data siswa yang mengumpulkan lebih dari 1x akan otomatis digabungkan. Sistem utama hanya menampilkan nilai tertinggi (terbaik), namun riwayat materi ujian lengkap bisa dilihat di bawah nama siswa.
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                    <h3 class="font-bold text-slate-700 mb-2">📥 Input Kode Setoran Siswa</h3>
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <input type="text" id="inputTeacherToken" class="w-full p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="Paste kode di sini...">
+                        <button onclick="processStudentToken()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-md md:w-auto w-full flex-shrink-0">Tarik Data</button>
+                    </div>
+                </div>
+
+                <!-- RINGKASAN PER KELAS BARU -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-lg text-slate-800 mb-3">📈 Ringkasan Per Kelas</h3>
+                    <div id="summaryCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Kartu kelas otomatis dirender oleh Javascript -->
+                    </div>
+                </div>
+
+                <!-- DIAGRAM CAPAIAN VISUAL (CHART.JS) -->
+                <div class="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6" id="chartsContainer">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-700 mb-4 text-center">📊 Rata-rata Nilai Per Kelas</h3>
+                        <canvas id="classChart" height="220"></canvas>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-700 mb-4 text-center">📈 Persebaran Nilai Siswa <span id="studentChartTitle"></span></h3>
+                        <canvas id="studentChart" height="220"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row justify-between md:items-start lg:items-center mb-4 gap-4">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <h3 class="font-bold text-lg text-slate-800 whitespace-nowrap">📋 Detail Nilai Siswa</h3>
+                        <select id="classFilter" onchange="renderGradesTable()" class="w-full md:w-auto p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none font-bold text-emerald-700">
+                            <!-- Filter kelas dirender otomatis -->
+                        </select>
+                    </div>
+                    <div class="flex gap-2 flex-wrap w-full md:w-auto">
+                        <!-- FITUR BARU: BACKUP & IMPORT NILAI -->
+                        <input type="file" id="importGradesFile" accept=".json" class="hidden" onchange="importGrades(event)">
+                        <button onclick="document.getElementById('importGradesFile').click()" class="text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-4 py-2 rounded-lg transition border border-indigo-200 flex items-center justify-center gap-2 flex-1 md:flex-none">
+                            📥 Import Nilai
+                        </button>
+                        <button onclick="exportGradesJSON()" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm flex items-center justify-center gap-2 flex-1 md:flex-none">
+                            💾 Backup Nilai (JSON)
+                        </button>
+                        <button onclick="exportGradesToPDF()" class="text-sm bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm flex items-center justify-center gap-2 flex-1 md:flex-none">
+                            <span id="txt-btn-pdf">📄 Unduh Semua (PDF)</span>
+                        </button>
+                        <button onclick="exportGradesToCSV()" class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm flex items-center justify-center gap-2 flex-1 md:flex-none">
+                            📊 Unduh Excel (CSV)
+                        </button>
+                        <button onclick="clearGrades()" class="text-sm text-red-500 font-bold hover:bg-red-50 px-3 py-2 rounded-lg transition border border-red-200 w-full md:w-auto">
+                            Hapus Semua Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-3 border-b">No</th>
+                                <th class="p-3 border-b">Nama Lengkap</th>
+                                <th class="p-3 border-b">Kelas</th>
+                                <th class="p-3 border-b text-center">Skor</th>
+                                <th class="p-3 border-b text-center">Nilai Terbaik</th>
+                                <th class="p-3 border-b text-center">Peringkat</th>
+                                <th class="p-3 border-b">Waktu Setor</th>
+                                <th class="p-3 border-b text-center action-col">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradesTableBody" class="bg-white text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm font-medium text-slate-400 no-print">
+            Created by : Saiful Hadi
+        </footer>
+    </main>
+
+    <!-- Modal Custom -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50 opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300" id="modalBox">
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-2"></h3>
+            <p id="modalMessage" class="text-slate-600 mb-6 whitespace-pre-wrap"></p>
+            <div class="flex justify-end gap-3" id="modalActions"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPT UTAMA -->
+    <script>
+        // KODE KEAMANAN ANTI KLIK KANAN DAN ANTI INSPECT
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+        }
+
+        // ============================================
+        // PIN RAHASIA GURU (GANTI ANGKA INI JIKA PERLU)
+        const PIN_GURU = "123456"; 
+        // ============================================
+
+        function switchTab(tab) {
+            if (tab === 'guru' && !isStudentMode) {
+                let inputPin = prompt("🔒 Masukkan PIN Rahasia Pembuat Aplikasi:");
+                if (inputPin !== PIN_GURU) {
+                    showModal("Akses Ditolak", "PIN yang Anda masukkan salah. Hanya pembuat aplikasi yang bisa masuk.");
+                    return; 
+                }
+            }
+
+            document.getElementById('ruang-siswa').classList.toggle('hidden', tab !== 'siswa');
+            document.getElementById('ruang-guru').classList.toggle('hidden', tab !== 'guru');
+            document.getElementById('btn-tab-siswa').className = tab === 'siswa' ? "px-6 py-2 rounded-full font-bold bg-blue-600 text-white shadow-md" : "px-6 py-2 rounded-full font-bold bg-slate-100 text-slate-600";
+            document.getElementById('btn-tab-guru').className = tab === 'guru' ? "px-6 py-2 rounded-full font-bold bg-emerald-600 text-white shadow-md" : "px-6 py-2 rounded-full font-bold bg-slate-100 text-slate-600 hover:bg-slate-200";
+        }
+
+        function escapeHtml(unsafe) {
+            if (unsafe === undefined || unsafe === null) return '';
+            return unsafe.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        const dbName = "ListeningAppDB";
+        const storeName = "store";
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = (e) => {
+                    if (!e.target.result.objectStoreNames.contains(storeName)) {
+                        e.target.result.createObjectStore(storeName);
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function setItemDB(key, value) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).put(value, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function getItemDB(key) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, "readonly");
+                const request = tx.objectStore(storeName).get(key);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function removeItemDB(key) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).delete(key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        let topicsData = []; 
+        let examBank = [];   
+        let studentGrades = []; 
+        let isStudentMode = false;
+        let currentEditingId = null; 
+        let currentCustomAudioObj = null;
+        let classChartInstance = null;
+        let studentChartInstance = null;
+        
+        window.globalQuestionCounter = 0; 
+
+        window.onload = async () => {
+            if(!isStudentMode) {
+                try {
+                    for (let key of ['listeningExamData', 'listeningExamBank', 'listeningExamGrades']) {
+                        let oldData = localStorage.getItem(key);
+                        if (oldData) {
+                            await setItemDB(key, JSON.parse(oldData));
+                            localStorage.removeItem(key); 
+                        }
+                    }
+                } catch(e) { console.error("Migration error", e); }
+
+                const savedActive = await getItemDB('listeningExamData');
+                if (savedActive) topicsData = savedActive;
+                
+                const savedBank = await getItemDB('listeningExamBank');
+                if (savedBank) examBank = savedBank;
+                
+                const savedGrades = await getItemDB('listeningExamGrades');
+                if (savedGrades) studentGrades = savedGrades;
+                
+                initTeacherView();
+                renderGradesTable();
+                renderExamBank();
+                updateTemplateDropdown(); 
+            }
+            renderStudentView();
+        };
+
+        function showModal(title, message, isConfirm = false, onConfirm = null) {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').innerHTML = message;
+            const actions = document.getElementById('modalActions');
+            if(isConfirm) {
+                actions.innerHTML = `
+                    <button onclick="closeModal()" class="px-5 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Batal</button>
+                    <button id="confirmBtn" class="px-5 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow-md">Yakin</button>
+                `;
+                document.getElementById('confirmBtn').onclick = () => { onConfirm(); closeModal(); };
+            } else {
+                actions.innerHTML = `<button onclick="closeModal()" class="px-5 py-2 bg-blue-600 text-white font-bold rounded-xl shadow-md">Mengerti</button>`;
+            }
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
+        }
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            modal.classList.add('opacity-0'); box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function switchTeacherTab(subTab) {
+            document.getElementById('guru-sub-soal').classList.toggle('hidden', subTab !== 'soal');
+            document.getElementById('guru-sub-bank').classList.toggle('hidden', subTab !== 'bank');
+            document.getElementById('guru-sub-rekap').classList.toggle('hidden', subTab !== 'rekap');
+            document.getElementById('btn-guru-soal').className = subTab === 'soal' ? "px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600" : "px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
+            document.getElementById('btn-guru-bank').className = subTab === 'bank' ? "px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600" : "px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
+            document.getElementById('btn-guru-rekap').className = subTab === 'rekap' ? "px-4 py-2 font-bold text-emerald-600 border-b-2 border-emerald-600" : "px-4 py-2 font-bold text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
+        }
+
+        // ================= RUANG SISWA =================
+        function renderStudentView() {
+            const container = document.getElementById('studentContainer');
+            container.innerHTML = ''; 
+            if(topicsData.length === 0) { 
+                container.innerHTML = `<div class="text-center p-8 text-slate-500 border-2 border-dashed border-slate-300 rounded-2xl">Ujian belum disiapkan oleh guru.</div>`; return; 
+            }
+            
+            topicsData.forEach((topic, tIndex) => {
+                let topicHtml = `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                        <h2 class="text-2xl font-extrabold text-slate-800 border-b border-slate-100 pb-4 mb-6">${topic.title}</h2>
+                        <div class="space-y-8">
+                `;
+
+                let totalQuestions = 0;
+
+                topic.audios.forEach((track, aIndex) => {
+                    totalQuestions += track.questions.length;
+                    let qHtml = '';
+                    track.questions.forEach((q, qIndex) => {
+                        const qType = q.type || 'sa';
+                        
+                        qHtml += `
+                            <div class="question-item bg-white p-4 rounded-xl border border-slate-200 shadow-sm" data-exam="${tIndex}" data-audio="${aIndex}" data-question="${qIndex}" data-qtype="${qType}">
+                                <div class="text-sm font-bold text-blue-600 mb-1">Question ${qIndex + 1}</div>
+                                <div class="text-slate-700 font-medium mb-3">📍 ${escapeHtml(q.instruction)}</div>
+                        `;
+
+                        if (qType === 'sa') {
+                            const answersAttr = encodeURIComponent(JSON.stringify(q.acceptableAnswers));
+                            qHtml += `<input type="text" class="q-input-sa w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-400 no-print text-sm" data-answers="${answersAttr}" placeholder="Type your answer...">`;
+                        } else if (qType === 'mcq') {
+                            const correctAns = q.acceptableAnswers[0];
+                            qHtml += `<div class="space-y-2 q-input-mcq" data-answer="${correctAns}">`;
+                            q.options.forEach((opt, oIdx) => {
+                                if(!opt) return;
+                                const cleanOpt = escapeHtml((opt || "").toString().replace(/\*/g, '').trim());
+                                const optId = `mcq-${tIndex}-${aIndex}-${qIndex}-${oIdx}`;
+                                const radioName = `mcq-${tIndex}-${aIndex}-${qIndex}`;
+                                qHtml += `
+                                    <label for="${optId}" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-blue-50 transition opt-label no-print">
+                                        <input type="radio" id="${optId}" name="${radioName}" value="${oIdx}" class="w-4 h-4 text-blue-600 focus:ring-blue-400 cursor-pointer">
+                                        <span class="text-slate-700 text-sm font-medium">${cleanOpt}</span>
+                                    </label>
+                                `;
+                            });
+                            qHtml += `</div>`;
+                        }
+                        
+                        qHtml += `<div id="feedback-${tIndex}-${aIndex}-${qIndex}" class="mt-2 text-sm font-bold hidden print-only"></div>`;
+                        qHtml += `</div>`;
+                    });
+
+                    const sisaPutar = 10 - (track.playCount || 0);
+                    const btnStyle = sisaPutar <= 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 shadow-md';
+
+                    topicHtml += `
+                        <div class="p-5 border-2 border-slate-100 rounded-2xl bg-slate-50 relative">
+                            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                                <h3 class="text-lg font-bold text-slate-700">🎧 Part ${aIndex + 1}</h3>
+                                <button id="btn-play-${tIndex}-${aIndex}" onclick="playAudioText(${tIndex}, ${aIndex})" class="no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center ${btnStyle}">
+                                    ▶️ Play Audio (Sisa: ${sisaPutar}x)
+                                </button>
+                            </div>
+                            <div class="grid gap-4">${qHtml}</div>
+                        </div>
+                    `;
+                });
+
+                topicHtml += `
+                        </div>
+                        <div class="mt-8 flex justify-between items-center bg-slate-100 p-5 rounded-2xl no-print border border-slate-300">
+                            <span class="font-extrabold text-slate-700 text-lg" id="score-${tIndex}">Score: 0 / ${totalQuestions}</span>
+                            <button onclick="checkAnswers(${tIndex})" class="bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-md transform hover:-translate-y-1 transition text-lg">Submit & Check</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += topicHtml;
+            });
+        }
+
+        function playAudioText(tIndex, aIndex) {
+            const track = topicsData[tIndex].audios[aIndex];
+            if (typeof track.playCount === 'undefined') track.playCount = 0;
+            if (track.playCount >= 10) { showModal("Akses Ditolak", "Batas pemutaran audio sudah habis."); return; }
+            
+            const btn = document.getElementById(`btn-play-${tIndex}-${aIndex}`);
+            
+            window.speechSynthesis.cancel();
+            if(currentCustomAudioObj) {
+                currentCustomAudioObj.pause();
+                currentCustomAudioObj.currentTime = 0;
+            }
+
+            track.playCount++;
+            const sisa = 10 - track.playCount;
+
+            if (track.audioType === 'custom' && track.audioBase64) {
+                currentCustomAudioObj = new Audio(track.audioBase64);
+                currentCustomAudioObj.play();
+                btn.disabled = true;
+                btn.innerHTML = `⏳ Sedang Memutar...`;
+                currentCustomAudioObj.onended = () => {
+                    btn.disabled = false;
+                    btn.innerHTML = `▶️ Play Audio (Sisa: ${sisa}x)`;
+                    if(sisa === 0) {
+                        btn.className = "no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
+                        btn.disabled = true;
+                    }
+                };
+            } else {
+                const utterance = new SpeechSynthesisUtterance(track.ttsText);
+                utterance.lang = track.lang || 'en-US'; 
+                utterance.rate = parseFloat(track.rate || 0.9); 
+                window.speechSynthesis.speak(utterance);
+
+                btn.innerHTML = `▶️ Play Audio (Sisa: ${sisa}x)`;
+                if(sisa === 0) {
+                    btn.className = "no-print text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center bg-slate-400 cursor-not-allowed";
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        async function checkAnswers(tIndex) {
+            const name = document.getElementById('studentName').value.trim();
+            const className = document.getElementById('studentClass').value.trim();
+            if (name === "" || className === "") { showModal("Data Belum Lengkap", "Mohon isi NAMA LENGKAP dan KELAS!"); return; }
+            
+            let correctCount = 0;
+            let totalSoal = 0;
+
+            const questionItems = document.querySelectorAll(`div.question-item[data-exam="${tIndex}"]`);
+            questionItems.forEach(item => {
+                totalSoal++;
+                const aIndex = item.getAttribute('data-audio');
+                const qIndex = item.getAttribute('data-question');
+                const qType = item.getAttribute('data-qtype');
+                const feedbackDiv = document.getElementById(`feedback-${tIndex}-${aIndex}-${qIndex}`);
+                let isCorrect = false;
+                
+                feedbackDiv.classList.remove('hidden');
+
+                if (qType === 'sa') {
+                    const input = item.querySelector('.q-input-sa');
+                    const userAns = input.value.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+                    const acceptableAnswers = JSON.parse(decodeURIComponent(input.getAttribute('data-answers')));
+                    isCorrect = acceptableAnswers.some(key => userAns.includes(key.toLowerCase()));
+                    
+                    if (isCorrect && userAns !== "") {
+                        input.className = 'q-input-sa w-full p-3 border-2 border-emerald-400 bg-emerald-50 text-emerald-800 rounded-xl no-print font-bold text-sm';
+                        feedbackDiv.innerHTML = '✅ Correct'; 
+                        feedbackDiv.className = 'mt-2 text-sm font-bold text-emerald-600 print-only block'; 
+                        correctCount++;
+                    } else {
+                        input.className = 'q-input-sa w-full p-3 border-2 border-red-400 bg-red-50 text-red-800 rounded-xl no-print text-sm';
+                        feedbackDiv.innerHTML = `❌ Wrong. <span class="text-slate-600 font-normal">Answer: <b class="text-emerald-600">${acceptableAnswers.join(" / ")}</b></span>`;
+                        feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block'; 
+                    }
+                } else if (qType === 'mcq') {
+                    const mcqGroup = item.querySelector('.q-input-mcq');
+                    const correctAns = mcqGroup.getAttribute('data-answer');
+                    const checkedRadio = mcqGroup.querySelector('input[type="radio"]:checked');
+                    
+                    mcqGroup.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+                    
+                    if (checkedRadio) {
+                        const userAns = checkedRadio.value;
+                        isCorrect = (userAns === correctAns);
+                        const checkedLabel = checkedRadio.closest('.opt-label');
+                        
+                        if (isCorrect) {
+                            checkedLabel.classList.add('border-emerald-400', 'bg-emerald-50', 'text-emerald-800', 'border-2');
+                            feedbackDiv.innerHTML = '✅ Correct'; 
+                            feedbackDiv.className = 'mt-2 text-sm font-bold text-emerald-600 print-only block'; 
+                            correctCount++;
+                        } else {
+                            checkedLabel.classList.add('border-red-400', 'bg-red-50', 'text-red-800', 'border-2');
+                            feedbackDiv.innerHTML = `❌ Wrong.`;
+                            feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block'; 
+                        }
+                    } else {
+                        feedbackDiv.innerHTML = `❌ No answer selected.`;
+                        feedbackDiv.className = 'mt-2 text-sm text-red-500 font-bold block';
+                    }
+                    
+                    const correctRadio = mcqGroup.querySelector(`input[type="radio"][value="${correctAns}"]`);
+                    if(correctRadio && !isCorrect) {
+                        const correctLabel = correctRadio.closest('.opt-label');
+                        correctLabel.classList.add('border-emerald-400', 'border-2', 'border-dashed'); 
+                    }
+                }
+            });
+
+            const nilaiAkhir = Math.round((correctCount / totalSoal) * 100);
+            document.getElementById(`score-${tIndex}`).innerHTML = `Final Score: <span class="text-emerald-600 font-extrabold text-xl">${correctCount} / ${totalSoal}</span>`;
+            
+            const dateStr = new Date().toLocaleString('id-ID', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'});
+            const topicTitle = topicsData[tIndex].title || "Ujian Listening";
+
+            const newGradeRecord = { nama: name, kelas: className, skor: `${correctCount}/${totalSoal}`, nilaiAkhir: nilaiAkhir, waktu: dateStr, topik: topicTitle };
+            
+            let currentGrades = await getItemDB('listeningExamGrades') || [];
+            currentGrades.push(newGradeRecord);
+            await setItemDB('listeningExamGrades', currentGrades);
+            
+            if(!isStudentMode) { 
+                studentGrades = currentGrades; 
+                renderGradesTable(); 
+            }
+
+            const rawToken = `${name} | ${className} | ${correctCount} | ${totalSoal} | ${dateStr} | ${topicTitle}`;
+            document.getElementById('studentTokenResult').value = btoa(encodeURIComponent(rawToken)); 
+            if(isStudentMode) document.getElementById('autoSaveMsg').classList.add('hidden');
+            document.getElementById('tokenContainer').classList.remove('hidden');
+            showModal("Penilaian Selesai", `Tersimpan! Kamu benar ${correctCount} dari ${totalSoal}.`);
+        }
+
+        function copyToken() {
+            const tokenInput = document.getElementById('studentTokenResult');
+            tokenInput.select(); document.execCommand('copy');
+            const msg = document.getElementById('copyMsg');
+            msg.classList.remove('fade-out'); msg.style.opacity = 1;
+            setTimeout(() => { msg.classList.add('fade-out'); }, 1500);
+        }
+        function sendToWA() {
+            let waNum = document.getElementById('waGuru').value.trim();
+            const token = document.getElementById('studentTokenResult').value;
+            const name = document.getElementById('studentName').value.trim();
+            const className = document.getElementById('studentClass').value.trim();
+            if(!waNum) { showModal("Nomor WA Kosong", "Masukkan nomor WhatsApp guru terlebih dahulu."); return; }
+            waNum = waNum.replace(/\D/g, ''); 
+            if(waNum.startsWith('0')) { waNum = '62' + waNum.substring(1); }
+            const message = `Halo Bapak/Ibu Guru, ini adalah kode setoran nilai Listening Bahasa Inggris saya.\n\nNama: *${name}*\nKelas: *${className}*\nKode:\n*${token}*\n\nTerima kasih.`;
+            const waUrl = `https://api.whatsapp.com/send?phone=${waNum}&text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }
+        function printReport() {
+            const name = document.getElementById('studentName').value.trim();
+            const className = document.getElementById('studentClass').value.trim();
+            if (name === "" || className === "") { showModal("Data Belum Lengkap", "Mohon isi NAMA dan KELAS!"); return; }
+            document.getElementById('printName').textContent = `Nama: ${name}`;
+            document.getElementById('printClass').textContent = `Kelas: ${className}`;
+            window.print();
+        }
+
+        // ================= RUANG GURU =================
+        function initTeacherView() {
+            if(topicsData.length > 0) loadExamToEditor(topicsData[0]);
+            else if(document.getElementById('materialsWrapper').children.length === 0){
+                addMaterialBlock(); 
+            }
+        }
+
+        function resetEditor() {
+            currentEditingId = null; 
+            document.getElementById('guruTopicTitle').value = '';
+            document.getElementById('materialsWrapper').innerHTML = ''; 
+            addMaterialBlock();
+            document.getElementById('templateSelector').value = "0";
+            showModal("Form Dikosongkan", "Silakan atur audio Anda dan masukkan soal secara manual.");
+        }
+        
+        function toggleAudioType(selectElem) {
+            const block = selectElem.closest('.material-block');
+            const type = selectElem.value;
+            if(type === 'custom') {
+                block.querySelector('.m-area-tts').classList.add('hidden');
+                block.querySelector('.m-area-custom').classList.remove('hidden');
+            } else {
+                block.querySelector('.m-area-tts').classList.remove('hidden');
+                block.querySelector('.m-area-custom').classList.add('hidden');
+            }
+        }
+
+        function handleAudioUpload(inputElem) {
+            const file = inputElem.files[0];
+            if (!file) return;
+
+            if (file.size > 25 * 1024 * 1024) { 
+                showModal("File Terlalu Besar", "Ukuran maksimal PER FILE dibatasi 25 MB agar web tidak lemot.");
+                inputElem.value = ""; return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                const block = inputElem.closest('.material-block');
+                
+                block.querySelector('.m-audio-base64').value = base64Data;
+                block.querySelector('.m-audio-filename').value = file.name;
+                block.querySelector('.m-filename-display').textContent = file.name;
+                
+                const previewDiv = block.querySelector('.m-audio-preview');
+                previewDiv.classList.remove('hidden');
+                previewDiv.querySelector('audio').src = base64Data;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleQuestionType(selectElem) {
+            const block = selectElem.closest('.q-block');
+            if (selectElem.value === 'mcq') {
+                block.querySelector('.sa-area').classList.add('hidden');
+                block.querySelector('.mcq-area').classList.remove('hidden');
+            } else {
+                block.querySelector('.sa-area').classList.remove('hidden');
+                block.querySelector('.mcq-area').classList.add('hidden');
+            }
+        }
+
+        function addMaterialBlock(mIndex = -1, audioObj = null) {
+            const wrapper = document.getElementById('materialsWrapper');
+            if(mIndex === -1) mIndex = wrapper.children.length;
+
+            const ttsText = audioObj ? audioObj.ttsText : '';
+            const questions = audioObj ? audioObj.questions : [];
+            const lang = audioObj && audioObj.lang ? audioObj.lang : 'en-US';
+            const rate = audioObj && audioObj.rate ? audioObj.rate : '0.9';
+            const aType = audioObj && audioObj.audioType ? audioObj.audioType : 'tts';
+            const aBase64 = audioObj && audioObj.audioBase64 ? audioObj.audioBase64 : '';
+            const aName = audioObj && audioObj.audioFileName ? audioObj.audioFileName : '';
+
+            const matDiv = document.createElement('div');
+            matDiv.className = "material-block bg-white border-2 border-slate-200 p-5 rounded-2xl shadow-sm relative transition-all";
+            matDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-700 text-lg">🎧 Bagian Audio / Cerita <span class="mat-number">${mIndex + 1}</span></h3>
+                    <button onclick="this.parentElement.parentElement.remove(); updateMaterialLabels();" class="text-red-500 text-xs font-bold hover:bg-red-50 px-2 py-1 rounded transition">🗑️ Hapus Bagian Ini</button>
+                </div>
+                
+                <div class="mb-5 bg-slate-50 p-4 border border-slate-200 rounded-xl">
+                    <label class="block text-xs font-bold text-slate-500 mb-2">Pilih Sumber Audio untuk Bagian Ini:</label>
+                    <select class="m-audio-type w-full p-2 mb-3 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none font-bold text-blue-700" onchange="toggleAudioType(this)">
+                        <option value="tts" ${aType !== 'custom' ? 'selected' : ''}>🤖 Text-to-Speech (Suara Robot)</option>
+                        <option value="custom" ${aType === 'custom' ? 'selected' : ''}>🎵 Upload File Audio Sendiri (.mp3 / .wav)</option>
+                    </select>
+
+                    <div class="m-area-tts ${aType === 'custom' ? 'hidden' : ''}">
+                        <textarea class="m-tts w-full p-3 mb-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-400 text-sm" rows="3" placeholder="Ketik cerita bahasa Inggris di sini...">${ttsText}</textarea>
+                        <div class="flex gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100 flex-wrap md:flex-nowrap items-end">
+                            <div class="flex-1 min-w-[120px]">
+                                <label class="block text-xs font-bold text-blue-700 mb-1">🌍 Aksen Suara</label>
+                                <select class="m-lang w-full p-2 border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white text-blue-900">
+                                    <option value="en-US" ${lang === 'en-US' ? 'selected' : ''}>English (Amerika)</option>
+                                    <option value="en-GB" ${lang === 'en-GB' ? 'selected' : ''}>English (Inggris / UK)</option>
+                                    <option value="en-AU" ${lang === 'en-AU' ? 'selected' : ''}>English (Australia)</option>
+                                    <option value="en-IN" ${lang === 'en-IN' ? 'selected' : ''}>English (India)</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[120px]">
+                                <label class="block text-xs font-bold text-blue-700 mb-1">⚡ Kecepatan</label>
+                                <select class="m-rate w-full p-2 border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white text-blue-900">
+                                    <option value="0.8" ${rate == '0.8' ? 'selected' : ''}>Lambat (0.8x)</option>
+                                    <option value="0.9" ${rate == '0.9' || !rate ? 'selected' : ''}>Normal (0.9x)</option>
+                                    <option value="1.0" ${rate == '1.0' ? 'selected' : ''}>Cepat (1.0x)</option>
+                                    <option value="1.2" ${rate == '1.2' ? 'selected' : ''}>Sangat Cepat (1.2x)</option>
+                                </select>
+                            </div>
+                            <div class="w-full md:w-auto">
+                                <button onclick="testTeacherAudio(this)" class="bg-blue-600 text-white hover:bg-blue-700 w-full md:w-auto px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center justify-center gap-2">
+                                    🔊 Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="m-area-custom ${aType === 'custom' ? '' : 'hidden'}">
+                        <input type="file" accept="audio/*" onchange="handleAudioUpload(this)" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 mb-2 cursor-pointer transition">
+                        <input type="hidden" class="m-audio-base64" value="${aBase64}">
+                        <input type="hidden" class="m-audio-filename" value="${aName}">
+                        
+                        <div class="m-audio-preview ${aBase64 ? '' : 'hidden'} mt-3 bg-white p-3 border border-slate-200 rounded-xl">
+                            <p class="text-xs text-green-600 font-bold mb-2">✅ File saat ini: <span class="m-filename-display">${aName}</span></p>
+                            <audio controls class="w-full h-10 outline-none" src="${aBase64}"></audio>
+                        </div>
+                    </div>
+                </div>
+                
+                <label class="block text-xs font-bold text-slate-500 mb-2">Daftar Pertanyaan untuk Bagian Ini</label>
+                <div class="q-wrapper space-y-3 mb-4"></div>
+                
+                <button onclick="addQuestionField(this)" class="text-blue-600 font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition border border-blue-200">+ Tambah Kolom Soal</button>
+            `;
+            wrapper.appendChild(matDiv);
+
+            const qWrapper = matDiv.querySelector('.q-wrapper');
+            if(questions.length > 0) {
+                questions.forEach(q => {
+                    const qType = q.type || 'sa';
+                    let ansVal = ''; let opts = []; let corrIdx = -1; 
+                    if(qType === 'sa') {
+                        ansVal = q.acceptableAnswers.join(', ');
+                    } else {
+                        opts = q.options || [];
+                        corrIdx = parseInt(q.acceptableAnswers[0]);
+                        if(isNaN(corrIdx)) corrIdx = -1;
+                    }
+                    appendQuestionHtml(qWrapper, q.instruction, ansVal, qType, opts, corrIdx);
+                });
+            } else {
+                appendQuestionHtml(qWrapper); 
+            }
+        }
+
+        function testTeacherAudio(btn) {
+            const block = btn.closest('.material-block');
+            const text = block.querySelector('.m-tts').value.trim();
+            const lang = block.querySelector('.m-lang').value;
+            const rate = parseFloat(block.querySelector('.m-rate').value);
+            if(!text) { showModal("Teks Kosong", "Silakan ketik teks cerita terlebih dahulu."); return; }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; utterance.rate = rate; window.speechSynthesis.speak(utterance);
+        }
+
+        function updateMaterialLabels() {
+            const labels = document.querySelectorAll('.mat-number');
+            labels.forEach((label, idx) => { label.textContent = idx + 1; });
+        }
+
+        function appendQuestionHtml(qWrapper, instVal = '', ansVal = '', qType = 'sa', options = [], correctOptionIndex = -1) { 
+            const qDiv = document.createElement('div');
+            qDiv.className = "q-block p-4 border border-slate-200 bg-white rounded-xl flex flex-col gap-3 relative shadow-sm";
+            
+            window.globalQuestionCounter++;
+            const radioGroupName = "mcq_group_" + window.globalQuestionCounter;
+            
+            const safeInst = escapeHtml(instVal);
+            const safeAns = escapeHtml(ansVal);
+
+            let saHtml = `
+                <div class="sa-area ${qType === 'mcq' ? 'hidden' : ''}">
+                    <input type="text" class="q-ans p-3 w-full border border-slate-300 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none text-sm" placeholder="Kunci jawaban (Isian Singkat). Pisahkan dgn koma jika > 1 opsi." value="${qType === 'sa' ? safeAns : ''}">
+                </div>
+            `;
+            
+            let keyBadgeText = parseInt(correctOptionIndex) >= 0 ? 'Kunci: Opsi ' + String.fromCharCode(65 + parseInt(correctOptionIndex)) : 'Kunci: Belum Diatur';
+            let badgeClass = parseInt(correctOptionIndex) >= 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200 animate-pulse';
+
+            let mcqHtml = `<div class="mcq-area space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 ${qType === 'sa' ? 'hidden' : ''}">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2">
+                    <p class="text-xs text-slate-500 font-bold">Pilih Kunci Jawaban Pilihan Ganda:</p>
+                    <span class="key-indicator px-3 py-1 rounded-full text-xs font-extrabold shadow-sm border ${badgeClass}">
+                        ${keyBadgeText}
+                    </span>
+                </div>`;
+            
+            const optionPlaceholders = ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'];
+            const numOptions = Math.max(4, options.length);
+
+            for(let i=0; i<numOptions; i++) {
+                if(i > 4) break; 
+                
+                let isChecked = '';
+                if(qType === 'mcq' && parseInt(correctOptionIndex) === i) {
+                    isChecked = 'checked';
+                }
+                
+                const optClean = (options[i] || '').toString().replace(/\*/g, '').trim();
+                const optVal = escapeHtml(optClean);
+                
+                mcqHtml += `
+                    <div class="flex items-center gap-3">
+                        <input type="radio" name="${radioGroupName}" value="${i}" class="w-5 h-5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" ${isChecked} 
+                            onchange="let ind = this.closest('.mcq-area').querySelector('.key-indicator'); ind.textContent = 'Kunci: Opsi ' + String.fromCharCode(65 + parseInt(this.value)); ind.className = 'key-indicator px-3 py-1 rounded-full text-xs font-extrabold shadow-sm border bg-emerald-100 text-emerald-800 border-emerald-200';" 
+                            title="Tandai sebagai jawaban benar">
+                        <input type="text" class="opt-val flex-1 p-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-200 outline-none text-sm" placeholder="${optionPlaceholders[i]}" value="${optVal}">
+                    </div>
+                `;
+            }
+            mcqHtml += `</div>`;
+
+            qDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <div class="font-bold text-slate-500 text-xs">Soal <span class="soal-number">${qWrapper.children.length + 1}</span></div>
+                    <select class="q-type bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-lg px-2 py-1 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-400" onchange="toggleQuestionType(this)">
+                        <option value="sa" ${qType === 'sa' ? 'selected' : ''}>📝 Isian Singkat</option>
+                        <option value="mcq" ${qType === 'mcq' ? 'selected' : ''}>✅ Pilihan Ganda</option>
+                    </select>
+                </div>
+                <input type="text" class="q-inst p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none text-sm font-medium" placeholder="Pertanyaan (Bhs Inggris)..." value="${safeInst}">
+                ${saHtml}
+                ${mcqHtml}
+                <button onclick="this.parentElement.remove(); updateQuestionLabels(this.parentElement.parentElement);" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition" title="Hapus Soal">✖</button>
+            `;
+            qWrapper.appendChild(qDiv);
+        }
+
+        function addQuestionField(btn) {
+            const qWrapper = btn.previousElementSibling;
+            appendQuestionHtml(qWrapper);
+        }
+
+        function updateQuestionLabels(qWrapper) {
+            setTimeout(() => {
+                if(qWrapper) {
+                    const labels = qWrapper.querySelectorAll('.soal-number');
+                    labels.forEach((label, idx) => { label.textContent = idx + 1; });
+                }
+            }, 10);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const fileName = file.name.toLowerCase();
+            if (fileName.endsWith('.txt')) {
+                const reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('importTextData').value = e.target.result; showModal("File Terbaca!", "Teks dimuat. Klik 'Pecah & Masukkan ke Form'."); };
+                reader.readAsText(file);
+            } else if (fileName.endsWith('.docx')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    mammoth.extractRawText({arrayBuffer: e.target.result}).then(function(result){
+                        document.getElementById('importTextData').value = result.value; showModal("File Word Terbaca!", "Teks dari dokumen MS Word dimuat. Klik 'Pecah & Masukkan ke Form'.");
+                    }).catch(function(err){ showModal("Gagal", "Error membaca Word. Pastikan file format .docx valid."); });
+                };
+                reader.readAsArrayBuffer(file);
+            } else { showModal("Gagal", "Hanya format .txt atau .docx yang didukung."); }
+        }
+
+        function processImportText() {
+            const text = document.getElementById('importTextData').value.trim();
+            if(!text) { showModal("Kosong", "Tidak ada teks yang bisa diproses. Upload file atau paste teks terlebih dahulu."); return; }
+            
+            const wrapper = document.getElementById('materialsWrapper');
+            if(wrapper.children.length === 0) { addMaterialBlock(); }
+            const lastMatBlock = wrapper.lastElementChild;
+            const qWrapper = lastMatBlock.querySelector('.q-wrapper');
+
+            const lines = text.split('\n');
+            let countImport = 0; 
+            
+            let questions = [];
+            let curQ = null;
+            let isGlobalKeySection = false;
+            let globalKeys = {};
+
+            const qRegex = /^\s*(?:Q\d*[\.\:]|Tanya(?:an)?[\.\:]|Soal\s*\d+[\.\:]?|\d+[\.\)])\s*(.+)/i;
+            const aRegex = /^\s*(?:Kunci(?:\s*Jawaban)?|Jawaban|Jawab|Answer|Key)\s*[:=\.]?\s*(.+)/i;
+            const optRegex = /^\s*([A-E])[\.\)]\s*(.+)/i; 
+
+            function saveCurrentQ() {
+                if (curQ) questions.push(curQ);
+                curQ = null;
+            }
+
+            for(let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if(!line) continue;
+
+                if (/^\s*(?:Kunci\s*Jawaban|Kunci|Answer\s*Key|Kunci\s*Jawaban\s*:)\s*$/i.test(line)) {
+                    isGlobalKeySection = true;
+                    saveCurrentQ();
+                    continue;
+                }
+
+                if (isGlobalKeySection) {
+                    let matches = [...line.matchAll(/(?:^|\s)(\d+)\s*[\.\-\=\:]?\s*([A-E])(?=\s|$|,|\.)/ig)];
+                    matches.forEach(m => {
+                        globalKeys[parseInt(m[1])] = m[2].toUpperCase();
+                    });
+                    continue; 
+                }
+
+                let isAst = line.includes('*');
+                let cleanLine = line.replace(/\*/g, '').trim(); 
+                
+                let qMatch = cleanLine.match(qRegex);
+                let aMatch = cleanLine.match(aRegex);
+                let optMatch = cleanLine.match(optRegex);
+
+                if (qMatch && !aMatch) {
+                    saveCurrentQ(); 
+                    let numMatch = line.match(/^\s*(?:Q|Soal\s*)?(\d+)/i);
+                    let qNum = numMatch ? parseInt(numMatch[1]) : (questions.length + 1);
+                    curQ = { num: qNum, inst: qMatch[1].replace(/\*/g, ''), opts: [], ans: '', correctIdx: -1, expectingAnswer: false };
+                } 
+                else if (optMatch && curQ && !aMatch) {
+                    let letter = optMatch[1].toUpperCase();
+                    let text = optMatch[2].trim();
+                    curQ.opts.push({ letter: letter, text: text, isAsterisk: isAst });
+                    curQ.expectingAnswer = false;
+                } 
+                else if (aMatch && curQ) {
+                    curQ.ans = aMatch[1].trim();
+                } 
+                else if (curQ) {
+                    if (line.match(/^\s*(?:Kunci(?:\s*Jawaban)?|Jawaban|Jawab|Answer|Key)\s*[:=\.]?\s*$/i)) {
+                        curQ.expectingAnswer = true;
+                    }
+                    else if (curQ.expectingAnswer) {
+                        curQ.ans = cleanLine;
+                        curQ.expectingAnswer = false;
+                    } 
+                    else if (curQ.opts.length > 0 && !curQ.ans) {
+                        curQ.opts[curQ.opts.length - 1].text += " " + cleanLine;
+                        if(isAst) curQ.opts[curQ.opts.length - 1].isAsterisk = true;
+                    } else if (!curQ.ans) {
+                        curQ.inst += " " + cleanLine;
+                    } else {
+                        curQ.ans += " " + cleanLine;
+                    }
+                }
+            }
+            saveCurrentQ(); 
+
+            questions.forEach(q => {
+                if(!q.inst) return;
+                
+                let qType = q.opts.length > 0 ? 'mcq' : 'sa';
+                let optionsArr = q.opts.map(o => o.text);
+                let ansIdx = -1; 
+                let ansVal = '';
+
+                if (qType === 'mcq') {
+                    while(optionsArr.length < 4) optionsArr.push('');
+                    
+                    let foundAsterisk = q.opts.findIndex(o => o.isAsterisk);
+
+                    if (foundAsterisk !== -1) {
+                        ansIdx = foundAsterisk; 
+                    } else if (q.ans) {
+                        let aClean = q.ans.trim().toUpperCase();
+                        let singleLetterMatch = aClean.match(/^([A-E])(?:\s*[\.\)\:\-]\s*|\s*$)/);
+                        
+                        if (singleLetterMatch) {
+                            let targetLetter = singleLetterMatch[1];
+                            let idx = q.opts.findIndex(o => o.letter === targetLetter);
+                            if(idx !== -1) ansIdx = idx;
+                            else ansIdx = targetLetter.charCodeAt(0) - 65;
+                        } else {
+                            let textMatchIdx = q.opts.findIndex(o => o.text.toUpperCase().includes(aClean) || aClean.includes(o.text.toUpperCase()));
+                            if(textMatchIdx !== -1) ansIdx = textMatchIdx;
+                        }
+                    } else if (globalKeys[q.num]) {
+                        let targetLetter = globalKeys[q.num];
+                        let idx = q.opts.findIndex(o => o.letter === targetLetter);
+                        if(idx !== -1) ansIdx = idx;
+                        else ansIdx = targetLetter.charCodeAt(0) - 65;
+                    }
+                } else {
+                    ansVal = q.ans || globalKeys[q.num] || '';
+                }
+
+                appendQuestionHtml(qWrapper, q.inst, ansVal, qType, optionsArr, ansIdx);
+                countImport++;
+            });
+
+            if(countImport > 0) {
+                const emptyBlocks = qWrapper.querySelectorAll('.q-block');
+                emptyBlocks.forEach(block => {
+                    const inst = block.querySelector('.q-inst').value;
+                    const saAns = block.querySelector('.q-ans').value;
+                    const optFirst = block.querySelector('.opt-val').value;
+                    if(!inst && !saAns && !optFirst) block.remove();
+                });
+                updateQuestionLabels(qWrapper);
+                showModal("Import Berhasil!", `Teks berhasil dipecah menjadi <b class="text-blue-600">${countImport} soal</b>.<br><br><span class="text-xs text-red-500">Silakan cek <b>Indikator Kunci Jawaban</b> berwarna hijau/merah di masing-masing soal.</span>`);
+                document.getElementById('importTextData').value = ''; 
+                document.getElementById('fileInputDoc').value = ''; 
+            } else {
+                showModal("Gagal Import", "Sistem tidak mendeteksi soal. Pastikan menggunakan urutan angka (1.) untuk soal, pilihan ganda (A., B., C., D.), dan (Jawaban: ) ATAU (*) untuk kunci.");
+            }
+        }
+
+        const presetTemplates = {
+            "preset_1": {
+                title: "Listening Exam: A Trip to the Museum",
+                audios: [{
+                    audioType: 'tts', lang: 'en-US', rate: '0.9',
+                    ttsText: "Last Wednesday, my classmates and I went to the National Museum. We arrived there at 9 AM by a yellow school bus. First, we visited the prehistoric room. After that, we went to the second floor to see traditional costumes. The guide, Mr. Budi, was friendly. At 12 PM, we had lunch. I ate fried rice. Finally, we went home at 3 PM.",
+                    questions: [
+                        { type: 'mcq', instruction: "What day did they go to the museum?", options: ["Monday", "Tuesday", "Wednesday", "Thursday"], acceptableAnswers: ["2"] }, 
+                        { type: 'mcq', instruction: "What time did they arrive?", options: ["8 AM", "9 AM", "10 AM", "11 AM"], acceptableAnswers: ["1"] },
+                        { type: 'sa', instruction: "What is the color of the bus?", acceptableAnswers: ["yellow"] },
+                        { type: 'sa', instruction: "Who is the guide?", acceptableAnswers: ["mr budi", "budi"] }
+                    ]
+                }]
+            },
+            "preset_2": {
+                title: "Listening Exam: Sarah's Daily Routine",
+                audios: [{
+                    audioType: 'tts', lang: 'en-US', rate: '0.9',
+                    ttsText: "Hello, my name is Sarah. I am 14 years old. Every morning, I wake up at 6 AM. I usually eat bread and drink milk for breakfast. At 7 AM, I go to school by bus. My favorite subject is Science. During break time, I always eat a sandwich in the canteen. I go home at 2 PM. In the afternoon, I play badminton with my friends. I usually sleep at 9 PM.",
+                    questions: [
+                        { type: 'mcq', instruction: "How old is Sarah?", options: ["12", "13", "14", "15"], acceptableAnswers: ["2"] }, 
+                        { type: 'mcq', instruction: "What does she drink for breakfast?", options: ["Tea", "Coffee", "Juice", "Milk"], acceptableAnswers: ["3"] },
+                        { type: 'sa', instruction: "What is her favorite subject?", acceptableAnswers: ["science"] }, 
+                        { type: 'sa', instruction: "What sport does she play?", acceptableAnswers: ["badminton"] }
+                    ]
+                }]
+            }
+        };
+
+        function updateTemplateDropdown() {
+            const selector = document.getElementById('templateSelector');
+            if(!selector) return;
+            let html = '<option value="0">Pilih Paket Ujian / Template Bawaan...</option>';
+            
+            html += '<optgroup label="✨ Template Bawaan Aplikasi">';
+            html += '<option value="preset_1">1. A Trip to the Museum (Campuran MCQ & Isian)</option>';
+            html += '<option value="preset_2">2. Sarah\'s Daily Routine (Campuran MCQ & Isian)</option>';
+            html += '</optgroup>';
+            
+            if (examBank && examBank.length > 0) {
+                html += '<optgroup label="🗃️ Bank Soal (Paket Buatan Guru)">';
+                [...examBank].reverse().forEach((exam) => { html += `<option value="bank_${exam.id}">💾 ${exam.title}</option>`; });
+                html += '</optgroup>';
+            }
+            selector.innerHTML = html;
+        }
+
+        function loadSelectedTemplate() {
+            const selection = document.getElementById('templateSelector').value;
+            if (selection === "0") { showModal("Perhatian", "Pilih salah satu judul paket di menu dropdown terlebih dahulu."); return; }
+            showModal("Ganti Template/Soal?", "Ini akan memuat soal ke dalam editor. Lanjutkan?", true, () => {
+                if (selection.startsWith('preset_')) {
+                    const t = presetTemplates[selection];
+                    currentEditingId = Date.now().toString(); 
+                    document.getElementById('guruTopicTitle').value = t.title;
+                    document.getElementById('materialsWrapper').innerHTML = ''; 
+                    t.audios.forEach((audio, idx) => { addMaterialBlock(idx, audio); });
+                } else if (selection.startsWith('bank_')) {
+                    const bankId = selection.replace('bank_', '');
+                    const selected = examBank.find(e => e.id === bankId);
+                    if(selected) loadExamToEditor(selected);
+                }
+            });
+        }
+
+        async function saveExamData() {
+            const title = document.getElementById('guruTopicTitle').value.trim();
+            if(!title) { showModal("Gagal", "Judul Ujian wajib diisi!"); return; }
+
+            const matBlocks = document.querySelectorAll('.material-block');
+            if(matBlocks.length === 0) { showModal("Gagal", "Minimal harus ada 1 Bagian Audio/Cerita."); return; }
+
+            let audios = [];
+            for(let i=0; i<matBlocks.length; i++) {
+                const block = matBlocks[i];
+                const audioType = block.querySelector('.m-audio-type').value;
+                const ttsText = block.querySelector('.m-tts').value.trim();
+                const lang = block.querySelector('.m-lang').value;
+                const rate = block.querySelector('.m-rate').value;
+                const aBase64 = block.querySelector('.m-audio-base64').value;
+                const aName = block.querySelector('.m-audio-filename').value;
+
+                if(audioType === 'tts' && !ttsText) { showModal("Gagal", `Teks cerita pada Bagian ${i+1} tidak boleh kosong!`); return; }
+                if(audioType === 'custom' && !aBase64) { showModal("Gagal", `File Audio pada Bagian ${i+1} belum diunggah!`); return; }
+
+                const qBlocks = block.querySelectorAll('.q-block');
+                let questions = [];
+                for(let j=0; j<qBlocks.length; j++) {
+                    const qType = qBlocks[j].querySelector('.q-type').value;
+                    const inst = qBlocks[j].querySelector('.q-inst').value.trim();
+                    
+                    if(qType === 'sa') {
+                        const ansStr = qBlocks[j].querySelector('.q-ans').value.trim();
+                        if(inst && ansStr) {
+                            questions.push({ type: 'sa', instruction: inst, acceptableAnswers: ansStr.split(',').map(s => s.trim()) });
+                        }
+                    } else if (qType === 'mcq') {
+                        const opts = Array.from(qBlocks[j].querySelectorAll('.opt-val')).map(inp => inp.value.replace(/\*/g, '').trim());
+                        const correctRadio = qBlocks[j].querySelector('input[type="radio"]:checked');
+                        
+                        if(inst && correctRadio && opts.some(o => o !== '')) {
+                            questions.push({ type: 'mcq', instruction: inst, options: opts, acceptableAnswers: [correctRadio.value] });
+                        } else if (inst) {
+                            showModal("Gagal Simpan", `Pertanyaan ganda <b>"${inst}"</b> belum memiliki kunci jawaban.<br><br>Silakan klik bulatan kecil (radio button) di sebelah kiri opsi yang benar agar kotak indikator berwarna Hijau.`); return;
+                        }
+                    }
+                }
+                if(questions.length === 0) { showModal("Gagal", `Bagian ${i+1} harus memiliki minimal 1 soal valid yang telah terisi.`); return; }
+
+                audios.push({ audioType: audioType, ttsText: ttsText, lang: lang, rate: rate, audioBase64: aBase64, audioFileName: aName, playCount: 0, questions: questions });
+            }
+
+            if(!currentEditingId) currentEditingId = Date.now().toString();
+            const examObj = { id: currentEditingId, title: title, audios: audios };
+
+            const bankIndex = examBank.findIndex(e => e.id === currentEditingId);
+            if(bankIndex >= 0) { examBank[bankIndex] = examObj; } else { examBank.push(examObj); }
+            
+            try {
+                await setItemDB('listeningExamBank', examBank);
+                topicsData = [examObj]; 
+                await setItemDB('listeningExamData', topicsData);
+
+                updateTemplateDropdown(); 
+                renderStudentView(); renderExamBank();
+                showModal("Tersimpan!", "Paket Ujian berhasil disimpan ke Bank Soal dan otomatis DITERAPKAN untuk siswa."); 
+            } catch (error) {
+                examBank.pop(); 
+                showModal("🛑 GAGAL MENYIMPAN!", "Kapasitas hardisk browser Anda tidak mencukupi. Cobalah menghapus beberapa soal lama di Bank Soal.");
+            }
+        }
+
+        function exportBankSoal() {
+            if(examBank.length === 0) { showModal("Kosong", "Belum ada soal di Bank Soal untuk di-backup."); return; }
+            const dataStr = JSON.stringify(examBank, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a"); link.href = url;
+            link.download = "Backup_Bank_Soal_Listening.json"; link.click(); URL.revokeObjectURL(url);
+        }
+
+        function importBankSoal(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if(!Array.isArray(importedData)) throw new Error("Format tidak valid");
+
+                    let addedCount = 0;
+                    importedData.forEach(importedExam => {
+                        const existingIndex = examBank.findIndex(ex => ex.id === importedExam.id);
+                        if(existingIndex === -1) { examBank.push(importedExam); addedCount++; } else { examBank[existingIndex] = importedExam; }
+                    });
+
+                    await setItemDB('listeningExamBank', examBank);
+                    renderExamBank(); updateTemplateDropdown();
+                    document.getElementById('importBankFile').value = ''; 
+                    showModal("Import Sukses", `Berhasil memuat dan menambahkan paket soal ke dalam Database Bank Soal.`);
+                } catch (err) { showModal("Gagal Import", "File rusak atau bukan file format Bank Soal yang valid."); }
+            };
+            reader.readAsText(file);
+        }
+
+        // ================= FITUR BARU: BACKUP & IMPORT REKAP NILAI (JSON) =================
+        function exportGradesJSON() {
+            if(studentGrades.length === 0) { showModal("Kosong", "Belum ada rekap nilai siswa untuk di-backup."); return; }
+            const dataStr = JSON.stringify(studentGrades, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a"); 
+            link.href = url;
+            link.download = "Backup_Rekap_Nilai_Siswa.json"; 
+            link.click(); 
+            URL.revokeObjectURL(url);
+        }
+
+        function importGrades(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedGrades = JSON.parse(e.target.result);
+                    if(!Array.isArray(importedGrades)) throw new Error("Format tidak valid");
+
+                    showModal("Konfirmasi Import Nilai", `Ditemukan <b>${importedGrades.length} data nilai</b> dalam file backup.<br><br>Pilih metode penggabungan data:`, true, async () => {
+                        let addedCount = 0;
+                        importedGrades.forEach(item => {
+                            if(item.nama && item.kelas && item.nilaiAkhir !== undefined) {
+                                const exists = studentGrades.some(g => g.nama === item.nama && g.kelas === item.kelas && g.waktu === item.waktu && g.topik === item.topik);
+                                if(!exists) {
+                                    studentGrades.push(item);
+                                    addedCount++;
+                                }
+                            }
+                        });
+
+                        await setItemDB('listeningExamGrades', studentGrades);
+                        renderGradesTable();
+                        document.getElementById('importGradesFile').value = '';
+                        showModal("Import Nilai Sukses", `Berhasil menambahkan <b>${addedCount} data nilai baru</b> ke dalam sistem rekapitulasi.`);
+                    });
+                } catch (err) { 
+                    showModal("Gagal Import", "File rusak atau bukan format backup rekap nilai JSON yang valid."); 
+                    document.getElementById('importGradesFile').value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderExamBank() {
+            const container = document.getElementById('bankSoalContainer');
+            container.innerHTML = '';
+            if(examBank.length === 0) {
+                container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-8 text-slate-500 border-2 border-dashed border-slate-300 rounded-xl">Bank soal masih kosong.</div>`; return;
+            }
+            const reversedBank = [...examBank].reverse();
+            reversedBank.forEach(exam => {
+                const isActive = (topicsData.length > 0 && topicsData[0].id === exam.id);
+                const activeBadge = isActive ? `<span class="bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full absolute -top-3 -right-3 shadow-sm border-2 border-white">Aktif Digunakan</span>` : '';
+                const activeBorder = isActive ? 'border-emerald-400 shadow-md ring-2 ring-emerald-100' : 'border-slate-200';
+                
+                let totalParts = exam.audios.length;
+                let totalQs = exam.audios.reduce((sum, audio) => sum + audio.questions.length, 0);
+                let hasMp3 = exam.audios.some(a => a.audioType === 'custom');
+                let mp3Badge = hasMp3 ? `<span class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded font-bold ml-2 border border-red-200">Ada File Audio/MP3</span>` : '';
+
+                container.innerHTML += `
+                    <div class="p-5 border ${activeBorder} rounded-2xl bg-white shadow-sm flex flex-col justify-between relative transition hover:shadow-md">
+                        ${activeBadge}
+                        <div class="mb-4">
+                            <h3 class="font-bold text-slate-800 text-lg mb-2 pr-4">${exam.title}</h3>
+                            ${mp3Badge}
+                            <div class="flex gap-2 mt-3">
+                                <span class="text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1 rounded-full">🎧 ${totalParts} Bagian</span>
+                                <span class="text-xs font-bold bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full">📝 ${totalQs} Soal</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-auto">
+                            <button onclick="loadExamFromBank('${exam.id}')" class="flex-1 bg-slate-100 text-slate-700 hover:bg-emerald-600 hover:text-white font-bold py-2 rounded-xl text-sm transition">Edit & Terapkan</button>
+                            <button onclick="deleteFromBank('${exam.id}')" class="bg-red-50 text-red-600 hover:bg-red-500 hover:text-white font-bold px-4 py-2 rounded-xl text-sm transition">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadExamFromBank(id) {
+            const selected = examBank.find(e => e.id === id);
+            if(selected) {
+                loadExamToEditor(selected);
+                topicsData = [selected]; 
+                setItemDB('listeningExamData', topicsData).then(() => {
+                    renderStudentView(); renderExamBank(); updateTemplateDropdown();
+                    showModal("Berhasil Dimuat", "Soal telah dimuat ke editor dan diterapkan sebagai ujian aktif untuk siswa.");
+                    switchTeacherTab('soal');
+                });
+            }
+        }
+
+        function loadExamToEditor(examObj) {
+            currentEditingId = examObj.id;
+            document.getElementById('guruTopicTitle').value = examObj.title;
+            const wrapper = document.getElementById('materialsWrapper');
+            wrapper.innerHTML = '';
+            
+            examObj.audios.forEach((audio, idx) => {
+                addMaterialBlock(idx, audio);
+            });
+            document.getElementById('templateSelector').value = `bank_${examObj.id}`;
+        }
+
+        function deleteFromBank(id) {
+            const isActive = (topicsData.length > 0 && topicsData[0].id === id);
+            showModal("Hapus Soal?", "Yakin ingin menghapus soal ini dari Bank Soal?", true, async () => {
+                examBank = examBank.filter(e => e.id !== id);
+                await setItemDB('listeningExamBank', examBank);
+                if(isActive) { topicsData = []; await removeItemDB('listeningExamData'); renderStudentView(); }
+                renderExamBank(); updateTemplateDropdown();
+                if(currentEditingId === id) resetEditor();
+            });
+        }
+
+        function updateCharts(classSummaries, studentData, filterName) {
+            const ctxClass = document.getElementById('classChart');
+            const ctxStudent = document.getElementById('studentChart');
+            if(!ctxClass || !ctxStudent) return;
+
+            if(classChartInstance) classChartInstance.destroy();
+            const classLabels = classSummaries.map(c => `Kelas ${c.kelas}`);
+            const classAverages = classSummaries.map(c => c.avg);
+            
+            classChartInstance = new Chart(ctxClass, {
+                type: 'bar',
+                data: {
+                    labels: classLabels,
+                    datasets: [{
+                        label: 'Rata-rata Kelas',
+                        data: classAverages,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)', 
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    scales: { y: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            if(studentChartInstance) studentChartInstance.destroy();
+            
+            document.getElementById('studentChartTitle').textContent = filterName === "ALL" ? "(Semua Kelas)" : `(Kelas ${filterName})`;
+            
+            const studentLabels = studentData.map(s => filterName === "ALL" ? `${s.nama} (${s.kelasMurni})` : s.nama);
+            const studentScores = studentData.map(s => s.nilaiAkhir);
+            const studentColors = studentScores.map(score => score >= 75 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'); 
+            const studentBorder = studentScores.map(score => score >= 75 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)');
+
+            studentChartInstance = new Chart(ctxStudent, {
+                type: 'bar',
+                data: {
+                    labels: studentLabels,
+                    datasets: [{
+                        label: 'Nilai Akhir',
+                        data: studentScores,
+                        backgroundColor: studentColors,
+                        borderColor: studentBorder,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    scales: { y: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function getGroupedGrades() {
+            let processedGradesMap = new Map();
+            
+            studentGrades.forEach(g => {
+                let kelasMurni = g.kelas.split(/[\/\-,]/)[0].trim().toUpperCase();
+                let namaNormal = g.nama.toLowerCase().trim().replace(/\s+/g, ' ');
+                let topikVal = (g.topik || "Ujian Listening").trim();
+                let key = namaNormal + "|||" + kelasMurni;
+                
+                if(!processedGradesMap.has(key)) {
+                    processedGradesMap.set(key, { ...g, kelasMurni: kelasMurni, topik: topikVal, attempts: 1, namaAsli: g.nama });
+                } else {
+                    let existing = processedGradesMap.get(key);
+                    existing.attempts += 1;
+                    if(g.nilaiAkhir > existing.nilaiAkhir) {
+                        existing.skor = g.skor;
+                        existing.nilaiAkhir = g.nilaiAkhir;
+                        existing.waktu = g.waktu;
+                        existing.kelas = g.kelas; 
+                        existing.namaAsli = g.nama; 
+                        existing.topik = topikVal;
+                    }
+                }
+            });
+            
+            return Array.from(processedGradesMap.values()).map(g => {
+                return { ...g, nama: g.namaAsli }; 
+            });
+        }
+
+        async function processStudentToken() {
+            const tokenInput = document.getElementById('inputTeacherToken');
+            const token = tokenInput.value.trim();
+            if(!token) { showModal("Gagal", "Kode setoran masih kosong!"); return; }
+            try {
+                const parts = decodeURIComponent(atob(token)).split(' | ');
+                if(parts.length < 5) throw new Error();
+                const [nama, kelas, skor, total, waktu] = parts;
+                const topik = parts.length > 5 ? parts[5] : "Ujian Listening";
+
+                const nilaiAkhir = Math.round((parseInt(skor) / parseInt(total)) * 100);
+                if(studentGrades.some(g => g.nama === nama && g.waktu === waktu)) { showModal("Info", "Data sudah ada."); tokenInput.value = ''; return; }
+                
+                studentGrades.push({ nama, kelas, skor: `${skor}/${total}`, nilaiAkhir, waktu, topik });
+                await setItemDB('listeningExamGrades', studentGrades);
+                tokenInput.value = ''; renderGradesTable(); showModal("Berhasil!", `Nilai milik ${nama} telah ditambahkan.`);
+            } catch (e) { showModal("Kode Invalid", "Pastikan kode tercopy dengan benar."); }
+        }
+
+        function deleteAllStudentGrades(encId) {
+            const nama = decodeURIComponent(atob(encId));
+            
+            showModal("Hapus Data Siswa", `Yakin ingin menghapus <b>semua riwayat nilai</b> milik <b>${escapeHtml(nama)}</b>?`, true, async () => {
+                const namaLower = nama.toLowerCase().trim().replace(/\s+/g, ' ');
+                studentGrades = studentGrades.filter(g => g.nama.toLowerCase().trim().replace(/\s+/g, ' ') !== namaLower);
+                await setItemDB('listeningExamGrades', studentGrades);
+                renderGradesTable(); 
+            });
+        }
+
+        function deleteSingleAttempt(encId) {
+            const decoded = decodeURIComponent(atob(encId)).split("|||");
+            const nama = decoded[0];
+            const waktu = decoded[1];
+            
+            showModal("Hapus Percobaan", `Hapus data ujian milik <b>${escapeHtml(nama)}</b> pada waktu ${waktu}?`, true, async () => {
+                const idx = studentGrades.findIndex(g => g.nama === nama && g.waktu === waktu);
+                if (idx !== -1) {
+                    studentGrades.splice(idx, 1);
+                    await setItemDB('listeningExamGrades', studentGrades);
+                    renderGradesTable(); 
+                }
+            });
+        }
+
+        function renderGradesTable() {
+            const tbody = document.getElementById('gradesTableBody');
+            const summaryContainer = document.getElementById('summaryCardsContainer');
+            const classFilter = document.getElementById('classFilter');
+            const chartsContainer = document.getElementById('chartsContainer');
+            
+            tbody.innerHTML = '';
+            if(summaryContainer) summaryContainer.innerHTML = '';
+            
+            if(studentGrades.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">Belum ada data nilai yang masuk.</td></tr>`; 
+                if(summaryContainer) {
+                    summaryContainer.innerHTML = `<div class="col-span-full p-6 text-center text-slate-500 italic border-2 border-dashed border-slate-300 rounded-xl bg-slate-50">Belum ada ringkasan kelas.</div>`;
+                }
+                if(chartsContainer) chartsContainer.classList.add('hidden');
+                if(classFilter) classFilter.innerHTML = '<option value="ALL">Semua Kelas</option>';
+                if(classChartInstance) { classChartInstance.destroy(); classChartInstance = null; }
+                if(studentChartInstance) { studentChartInstance.destroy(); studentChartInstance = null; }
+                return; 
+            }
+
+            if(chartsContainer) chartsContainer.classList.remove('hidden');
+
+            let processedGrades = getGroupedGrades();
+
+            let uniqueClasses = [...new Set(processedGrades.map(g => g.kelasMurni))].sort();
+            let currentFilter = classFilter ? classFilter.value : "ALL";
+
+            if(classFilter) {
+                let optionsHtml = '<option value="ALL">Tampilkan Semua Kelas</option>';
+                uniqueClasses.forEach(c => { optionsHtml += `<option value="${c}" ${c === currentFilter ? 'selected' : ''}>Kelas ${c}</option>`; });
+                classFilter.innerHTML = optionsHtml;
+            }
+
+            let rankedGrades = [];
+            let summaryHtml = '';
+            let classStats = []; 
+
+            uniqueClasses.forEach(c => {
+                let studentsInClass = processedGrades.filter(g => g.kelasMurni === c);
+                studentsInClass.sort((a, b) => b.nilaiAkhir - a.nilaiAkhir);
+                
+                let count = studentsInClass.length;
+                let sum = studentsInClass.reduce((acc, curr) => acc + curr.nilaiAkhir, 0);
+                let avg = (sum / count).toFixed(1);
+                let max = studentsInClass[0].nilaiAkhir; 
+                let min = studentsInClass[studentsInClass.length - 1].nilaiAkhir;
+                
+                classStats.push({ kelas: c, avg: avg });
+
+                summaryHtml += `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                            <h4 class="text-xl font-extrabold text-indigo-700">Kelas ${c}</h4>
+                            <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">${count} Siswa</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center col-span-2">
+                                <p class="text-xs text-blue-600 font-bold mb-1">Rata-rata Kelas</p>
+                                <p class="text-2xl font-extrabold text-blue-800">${avg}</p>
+                            </div>
+                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
+                                <p class="text-xs text-emerald-600 font-bold mb-1">Tertinggi</p>
+                                <p class="text-xl font-extrabold text-emerald-700">${max}</p>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-center">
+                                <p class="text-xs text-red-600 font-bold mb-1">Terendah</p>
+                                <p class="text-xl font-extrabold text-red-700">${min}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                let currentRank = 1;
+                for(let i=0; i < studentsInClass.length; i++) {
+                    if(i > 0 && studentsInClass[i].nilaiAkhir < studentsInClass[i-1].nilaiAkhir) { currentRank = i + 1; }
+                    studentsInClass[i].peringkat = currentRank;
+                    rankedGrades.push(studentsInClass[i]);
+                }
+            });
+
+            if(summaryContainer) {
+                summaryContainer.innerHTML = summaryHtml;
+            }
+
+            let dataToRender = [];
+            if (currentFilter === "ALL") {
+                dataToRender = rankedGrades.sort((a, b) => {
+                    if (a.kelasMurni < b.kelasMurni) return -1;
+                    if (a.kelasMurni > b.kelasMurni) return 1;
+                    return a.peringkat - b.peringkat;
+                });
+            } else {
+                dataToRender = rankedGrades.filter(g => g.kelasMurni === currentFilter);
+                dataToRender.sort((a, b) => a.peringkat - b.peringkat);
+            }
+
+            updateCharts(classStats, dataToRender, currentFilter);
+
+            dataToRender.forEach((g, index) => {
+                let badgeColor = g.nilaiAkhir >= 75 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800';
+                let attemptBadge = g.attempts > 1 ? `<span class="ml-2 text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200" title="Nilai tertinggi dari ${g.attempts} hasil">${g.attempts}x Ujian</span>` : '';
+                
+                let rankDisplay = `Rank ${g.peringkat}`;
+                if(currentFilter !== "ALL") {
+                    if(g.peringkat === 1) rankDisplay = "🥇 1"; else if(g.peringkat === 2) rankDisplay = "🥈 2";
+                    else if(g.peringkat === 3) rankDisplay = "🥉 3"; else rankDisplay = g.peringkat;
+                }
+                
+                let deleteAllId = btoa(encodeURIComponent(g.nama));
+                let bestTopic = g.topik || "Ujian Listening";
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 transition bg-white">
+                        <td class="p-3 align-top pt-4">${index + 1}</td>
+                        <td class="p-3 align-top pt-4">
+                            <div class="font-bold text-slate-700">${g.nama} ${attemptBadge}</div>
+                            <div class="text-[10px] text-slate-500 mt-1">⭐ Skor dari: <span class="font-semibold text-slate-600">${escapeHtml(bestTopic)}</span></div>
+                        </td>
+                        <td class="p-3 align-top pt-4">${g.kelas}</td>
+                        <td class="p-3 text-center align-top pt-4 font-bold">${g.skor}</td>
+                        <td class="p-3 text-center align-top pt-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${badgeColor}">${g.nilaiAkhir}</span></td>
+                        <td class="p-3 text-center align-top pt-4 font-bold text-indigo-600 text-lg">${rankDisplay}</td>
+                        <td class="p-3 text-xs text-slate-500 align-top pt-4">${g.waktu}</td>
+                        <td class="p-3 text-center action-col align-top pt-3 flex flex-wrap justify-center gap-1">
+                            <button onclick="exportSingleStudentPDF('${deleteAllId}', '${g.peringkat}')" class="text-blue-500 hover:bg-blue-50 hover:text-blue-700 p-2 rounded-lg transition" title="Unduh Rapor Siswa (PDF)">📄 Unduh Rapor</button>
+                            <button onclick="deleteAllStudentGrades('${deleteAllId}')" class="text-red-500 hover:bg-red-50 hover:text-red-700 p-2 rounded-lg transition" title="Hapus Semua Riwayat Siswa Ini">🗑️ Hapus</button>
+                        </td>
+                    </tr>
+                `;
+
+                if (g.attempts > 1) {
+                    let history = studentGrades.filter(raw => 
+                        raw.nama.toLowerCase().trim().replace(/\s+/g, ' ') === g.nama.toLowerCase().trim().replace(/\s+/g, ' ') &&
+                        raw.kelas.split(/[\/\-,]/)[0].trim().toUpperCase() === g.kelasMurni
+                    );
+
+                    let topicCounts = {};
+                    
+                    history.forEach((h) => {
+                        let isBest = (h.waktu === g.waktu && h.skor === g.skor);
+                        let attemptDelId = btoa(encodeURIComponent(h.nama + "|||" + h.waktu));
+                        let subBadgeColor = h.nilaiAkhir >= 75 ? 'text-emerald-600' : 'text-red-500';
+                        
+                        let tName = h.topik || "Ujian Listening";
+                        if(!topicCounts[tName]) topicCounts[tName] = 0;
+                        topicCounts[tName]++;
+                        let displayTopic = `${tName} (Ke-${topicCounts[tName]})`;
+
+                        tbody.innerHTML += `
+                            <tr class="sub-row border-b border-dashed border-slate-200 bg-slate-50/70 text-xs transition">
+                                <td class="p-2"></td>
+                                <td class="p-2 pl-8 text-slate-500">
+                                    ↳ ${escapeHtml(displayTopic)}
+                                    ${isBest ? '<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1 border border-emerald-200">Terbaik</span>' : ''}
+                                </td>
+                                <td class="p-2 text-slate-500">${h.kelas}</td>
+                                <td class="p-2 text-center text-slate-600">${h.skor}</td>
+                                <td class="p-2 text-center font-bold ${subBadgeColor}">${h.nilaiAkhir}</td>
+                                <td class="p-2 text-center text-slate-400">-</td>
+                                <td class="p-2 text-slate-500">${h.waktu}</td>
+                                <td class="p-2 text-center action-col flex justify-center gap-1">
+                                    <button onclick="deleteSingleAttempt('${attemptDelId}')" class="text-slate-400 hover:bg-red-100 hover:text-red-600 p-1 rounded transition text-[10px] font-bold" title="Hapus Ujian Ini Saja">✖ Hapus Histori</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+
+        function clearGrades() {
+            if(studentGrades.length === 0) return;
+            showModal("Hapus Data", "Yakin ingin menghapus semua rekap nilai secara permanen?", true, async () => {
+                studentGrades = []; await removeItemDB('listeningExamGrades'); renderGradesTable();
+            });
+        }
+
+        function triggerNativePrint(htmlContent) {
+            const mainElements = Array.from(document.body.children).filter(el => el.tagName !== 'SCRIPT');
+            mainElements.forEach(el => {
+                if(el.id !== 'teacherPrintArea') {
+                    el.setAttribute('data-old-display', el.style.display || '');
+                    el.style.display = 'none';
+                }
+            });
+
+            let printArea = document.getElementById('teacherPrintArea');
+            if (!printArea) {
+                printArea = document.createElement('div');
+                printArea.id = 'teacherPrintArea';
+                document.body.appendChild(printArea);
+            }
+            
+            printArea.innerHTML = htmlContent;
+            printArea.style.display = 'block';
+
+            setTimeout(() => {
+                window.print();
+                
+                printArea.style.display = 'none';
+                printArea.innerHTML = '';
+                mainElements.forEach(el => {
+                    if(el.id !== 'teacherPrintArea') {
+                        el.style.display = el.getAttribute('data-old-display');
+                    }
+                });
+            }, 500);
+        }
+
+        function exportGradesToPDF() {
+            if(studentGrades.length === 0) {
+                showModal("Kosong", "Belum ada data nilai untuk diunduh.");
+                return;
+            }
+
+            let classFilterText = document.getElementById('classFilter').options[document.getElementById('classFilter').selectedIndex].text;
+            let dateGenerated = new Date().toLocaleString('id-ID');
+
+            let exportData = getGroupedGrades();
+            exportData.sort((a,b) => {
+                let kA = a.kelasMurni; let kB = b.kelasMurni;
+                if(kA < kB) return -1; if(kA > kB) return 1;
+                return a.peringkat - b.peringkat;
+            });
+
+            let tableRows = '';
+            exportData.forEach((g, index) => {
+                let rankDisplay = `Rank ${g.peringkat}`;
+                let bestTopic = g.topik || "Ujian Listening";
+
+                tableRows += `
+                    <tr style="background-color: #ffffff; page-break-inside: avoid;">
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center;">${index + 1}</td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold;">${g.nama}</td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center;">${g.kelas}</td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; color: #475569;">${escapeHtml(bestTopic)} <span style="font-size:10px; color:#059669;">(Terbaik)</span></td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center;">${g.skor}</td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: ${g.nilaiAkhir >= 75 ? '#059669' : '#dc2626'};">${g.nilaiAkhir}</td>
+                        <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #4338ca;">${rankDisplay}</td>
+                    </tr>
+                `;
+
+                if (g.attempts > 1) {
+                    let history = studentGrades.filter(raw => 
+                        raw.nama.toLowerCase().trim().replace(/\s+/g, ' ') === g.nama.toLowerCase().trim().replace(/\s+/g, ' ') &&
+                        raw.kelas.split(/[\/\-,]/)[0].trim().toUpperCase() === g.kelasMurni
+                    );
+
+                    let topicCounts = {};
+                    history.forEach((h, hIdx) => {
+                        let tName = h.topik || "Ujian Listening";
+                        if(!topicCounts[tName]) topicCounts[tName] = 0;
+                        topicCounts[tName]++;
+                        let displayTopic = `${tName} (Ke-${topicCounts[tName]})`;
+                        let isBest = (h.waktu === g.waktu && h.skor === g.skor);
+
+                        tableRows += `
+                            <tr style="background-color: #f8fafc; font-size: 11px; page-break-inside: avoid;">
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; color: #64748b;">${hIdx + 1}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; color: #64748b; padding-left: 20px;">↳ Riwayat Nilai</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${h.kelas}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; color: #64748b;">${escapeHtml(displayTopic)} ${isBest ? '(Terbaik)' : ''}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${h.skor}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: ${h.nilaiAkhir >= 75 ? '#059669' : '#dc2626'};">${h.nilaiAkhir}</td>
+                                <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; color: #94a3b8;">${h.waktu}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+
+            let summaryCardsHTML = '<table style="width: 100%; border-spacing: 10px; border-collapse: separate; margin-bottom: 20px; page-break-inside: avoid;"><tr>';
+            let cardCount = 0;
+            Array.from(document.getElementById('summaryCardsContainer').children).forEach(card => {
+                if(cardCount > 0 && cardCount % 3 === 0) summaryCardsHTML += '</tr><tr>';
+                
+                let className = card.querySelector('h4').innerText;
+                let studentCount = card.querySelector('span').innerText;
+                let vals = card.querySelectorAll('.text-2xl, .text-xl');
+                let avg = vals[0].innerText;
+                let max = vals[1].innerText;
+                let min = vals[2].innerText;
+                
+                summaryCardsHTML += `
+                    <td style="width: 33.33%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; background-color: #f8fafc; vertical-align: top;">
+                        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 10px; font-weight: bold; color: #4338ca;">
+                            ${className} <span style="float: right; font-size: 11px; color: #64748b; background: #e0e7ff; padding: 2px 6px; border-radius: 10px;">${studentCount}</span>
+                        </div>
+                        <table style="width: 100%; text-align: center; font-size: 12px; border: none;">
+                            <tr>
+                                <td style="background-color: #eff6ff; padding: 5px; border-radius: 4px;">
+                                    <div style="font-size: 9px; color: #2563eb;">Rata-rata</div>
+                                    <div style="font-weight: bold; color: #1e40af; font-size: 14px;">${avg}</div>
+                                </td>
+                                <td style="background-color: #ecfdf5; padding: 5px; border-radius: 4px; margin: 0 4px;">
+                                    <div style="font-size: 9px; color: #059669;">Tertinggi</div>
+                                    <div style="font-weight: bold; color: #047857; font-size: 14px;">${max}</div>
+                                </td>
+                                <td style="background-color: #fef2f2; padding: 5px; border-radius: 4px;">
+                                    <div style="font-size: 9px; color: #dc2626;">Terendah</div>
+                                    <div style="font-weight: bold; color: #b91c1c; font-size: 14px;">${min}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                `;
+                cardCount++;
+            });
+            summaryCardsHTML += '</tr></table>';
+
+            const htmlString = `
+                <div style="padding: 20px; font-family: Helvetica, Arial, sans-serif; color: #1e293b; background: white;">
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #1e293b; padding-bottom: 15px;">
+                        <h2 style="margin: 0; font-size: 16px; color: #475569; letter-spacing: 1px;">SMP AL-AZHAR KELAPA GADING SURABAYA</h2>
+                        <h1 style="font-size: 24px; font-weight: bold; margin: 8px 0; color: #1e293b;">LAPORAN HASIL UJIAN LISTENING</h1>
+                        <p style="margin: 0; color: #64748b; font-size: 12px;">Guru Pengampu: Saiful Hadi | Filter: ${classFilterText} | Dicetak: ${dateGenerated}</p>
+                    </div>
+                    
+                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 5px; color: #334155;">Ringkasan Kelas</h3>
+                    ${summaryCardsHTML}
+
+                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #334155;">Rincian Nilai Siswa (Riwayat Ujian Lengkap)</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #cbd5e1;">
+                        <thead style="display: table-header-group;">
+                            <tr style="background-color: #475569; color: #ffffff; text-align: left;">
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">No</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Nama Lengkap</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">Kelas</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; font-weight: bold;">Materi Ujian</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">Skor</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">Nilai</th>
+                                <th style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">Peringkat / Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            triggerNativePrint(htmlString);
+        }
+
+        function exportSingleStudentPDF(encId, rank) {
+            const nama = decodeURIComponent(atob(encId));
+            
+            const grouped = getGroupedGrades();
+            const student = grouped.find(g => g.nama === nama);
+            if(!student) return;
+
+            let history = studentGrades.filter(raw => 
+                raw.nama.toLowerCase().trim().replace(/\s+/g, ' ') === student.nama.toLowerCase().trim().replace(/\s+/g, ' ') &&
+                raw.kelas.split(/[\/\-,]/)[0].trim().toUpperCase() === student.kelasMurni
+            );
+
+            let historyRows = '';
+            let topicCounts = {};
+            history.forEach((h, hIdx) => {
+                let tName = h.topik || "Ujian Listening";
+                if(!topicCounts[tName]) topicCounts[tName] = 0;
+                topicCounts[tName]++;
+                let displayTopic = `${tName} (Ke-${topicCounts[tName]})`;
+                let isBest = (h.waktu === student.waktu && h.skor === student.skor);
+
+                historyRows += `
+                    <tr style="text-align: center; border-bottom: 1px solid #e2e8f0; ${isBest ? 'background-color: #ecfdf5;' : 'background-color: #ffffff;'} page-break-inside: avoid;">
+                        <td style="padding: 12px 10px; border: 1px solid #cbd5e1;">${hIdx + 1}</td>
+                        <td style="padding: 12px 10px; border: 1px solid #cbd5e1; text-align: left;">${escapeHtml(displayTopic)} ${isBest ? '⭐ (Terbaik)' : ''}</td>
+                        <td style="padding: 12px 10px; border: 1px solid #cbd5e1;">${h.waktu}</td>
+                        <td style="padding: 12px 10px; border: 1px solid #cbd5e1;">${h.skor}</td>
+                        <td style="padding: 12px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: ${h.nilaiAkhir >= 75 ? '#059669' : '#dc2626'};">${h.nilaiAkhir}</td>
+                    </tr>
+                `;
+            });
+
+            let badgeColor = student.nilaiAkhir >= 75 ? '#059669' : '#dc2626'; 
+            let status = student.nilaiAkhir >= 75 ? 'TUNTAS' : 'BELUM TUNTAS';
+
+            const htmlString = `
+                <div style="padding: 40px; font-family: Helvetica, Arial, sans-serif; color: #1e293b; background: white; box-sizing: border-box;">
+                    <div style="border: 2px solid #cbd5e1; padding: 40px; border-radius: 12px;">
+                        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px double #1e293b; padding-bottom: 15px;">
+                            <h2 style="margin: 0; font-size: 16px; color: #475569; letter-spacing: 2px;">SMP AL-AZHAR KELAPA GADING SURABAYA</h2>
+                            <h1 style="font-size: 28px; font-weight: bold; margin: 10px 0; color: #1e293b;">RAPOR UJIAN LISTENING</h1>
+                            <p style="margin: 0; color: #64748b; font-size: 14px;">Tahun Ajaran 2026/2027</p>
+                        </div>
+
+                        <div style="margin-bottom: 30px; font-size: 16px;">
+                            <table style="width: 100%; border: none;">
+                                <tr>
+                                    <td style="width: 150px; font-weight: bold; padding: 8px 0;">Nama Lengkap</td>
+                                    <td style="width: 10px;">:</td>
+                                    <td style="color: #334155;">${student.nama}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding: 8px 0;">Kelas</td>
+                                    <td>:</td>
+                                    <td style="color: #334155;">${student.kelas}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; padding: 8px 0;">Materi Terbaik</td>
+                                    <td>:</td>
+                                    <td style="color: #334155;">${student.topik}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 40px;">
+                            <div style="display: inline-block; padding: 20px 40px; border: 2px solid ${badgeColor}; border-radius: 15px; background-color: #f8fafc; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                <div style="font-size: 14px; font-weight: bold; color: #64748b; margin-bottom: 5px;">NILAI AKHIR TERTINGGI</div>
+                                <div style="font-size: 48px; font-weight: bold; color: ${badgeColor}; line-height: 1;">${student.nilaiAkhir}</div>
+                                <div style="font-size: 16px; font-weight: bold; color: ${badgeColor}; margin-top: 10px; letter-spacing: 2px;">${status}</div>
+                            </div>
+                            <div style="margin-top: 15px; font-size: 16px; font-weight: bold; color: #4338ca;">
+                                Peringkat Kelas: Rank ${rank}
+                            </div>
+                        </div>
+
+                        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #334155;">Riwayat Seluruh Ujian yang Dikerjakan</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 40px;">
+                            <thead style="display: table-header-group;">
+                                <tr style="background-color: #475569; color: white; text-align: center;">
+                                    <th style="padding: 12px 10px; border: 1px solid #cbd5e1;">No</th>
+                                    <th style="padding: 12px 10px; border: 1px solid #cbd5e1; text-align: left;">Materi Ujian</th>
+                                    <th style="padding: 12px 10px; border: 1px solid #cbd5e1;">Waktu Setor</th>
+                                    <th style="padding: 12px 10px; border: 1px solid #cbd5e1;">Skor Benar</th>
+                                    <th style="padding: 12px 10px; border: 1px solid #cbd5e1;">Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${historyRows}
+                            </tbody>
+                        </table>
+
+                        <table style="width: 100%; border: none; margin-top: 30px; font-size: 16px; page-break-inside: avoid;">
+                            <tr>
+                                <td style="width: 60%;"></td>
+                                <td style="text-align: center;">
+                                    <p style="margin: 0 0 70px 0; color: #334155;">Surabaya, ${new Date().toLocaleDateString('id-ID')}<br>Guru Mata Pelajaran,</p>
+                                    <p style="margin: 0; font-weight: bold; text-decoration: underline; color: #1e293b;">Saiful Hadi</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            triggerNativePrint(htmlString);
+        }
+
+        function exportGradesToCSV() {
+            let processedGrades = studentGrades; 
+            if(processedGrades.length === 0) {
+                showModal("Kosong", "Belum ada data nilai untuk diunduh.");
+                return;
+            }
+            
+            let csvStr = "Nama Lengkap,Kelas,Materi Ujian,Skor,Nilai Akhir,Waktu Setor\n";
+            
+            let exportData = [...processedGrades].sort((a,b) => {
+                let kA = a.kelas.toUpperCase();
+                let kB = b.kelas.toUpperCase();
+                if(kA < kB) return -1;
+                if(kA > kB) return 1;
+                return b.nilaiAkhir - a.nilaiAkhir;
+            });
+
+            exportData.forEach(g => {
+                let safeName = g.nama.replace(/"/g, '""');
+                let safeClass = g.kelas.replace(/"/g, '""');
+                let safeTopik = (g.topik || "Ujian Listening").replace(/"/g, '""');
+                csvStr += `"${safeName}","${safeClass}","${safeTopik}","${g.skor}",${g.nilaiAkhir},"${g.waktu}"\n`;
+            });
+
+            const blob = new Blob(["\ufeff" + csvStr], { type: 'text/csv;charset=utf-8;' }); 
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "Rekap_Seluruh_Riwayat_Nilai.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportStudentHTML() {
+            const savedData = topicsData;
+            if(!savedData || savedData.length === 0) { showModal("Data Kosong", "Pilih atau buat soal terlebih dahulu."); return; }
+            showModal("Konfirmasi Export", "Download File HTML khusus siswa?", true, processExport);
+        }
+        function processExport() {
+            let currentHTML = document.documentElement.outerHTML;
+            let parser = new DOMParser(); let doc = parser.parseFromString(currentHTML, 'text/html');
+            doc.getElementById('nav-menu').remove(); doc.getElementById('ruang-guru').remove();
+            doc.getElementById('ruang-siswa').classList.remove('hidden');
+            let securedDataStr = JSON.stringify(topicsData);
+            let injectionScript = doc.createElement('script');
+            injectionScript.textContent = `
+                const encryptedExam = "${btoa(encodeURIComponent(securedDataStr))}";
+                topicsData = JSON.parse(decodeURIComponent(atob(encryptedExam)));
+                isStudentMode = true; 
+                window.onload = () => { renderStudentView(); };
+            `;
+            doc.body.appendChild(injectionScript);
+            let blob = new Blob(["<!DOCTYPE html>\n" + doc.documentElement.outerHTML], { type: "text/html;charset=utf-8" });
+            let downloadLink = document.createElement("a"); downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = "Listening_Exam_Student.html"; downloadLink.click();
+        }
+    </script>
+</body>
+</html>
